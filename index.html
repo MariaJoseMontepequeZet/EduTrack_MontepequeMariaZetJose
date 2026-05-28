@@ -4,586 +4,742 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description"
-        content="EduTrack — Cursos de tecnología para desarrolladores junior y mid en Colombia. Aprende con proyectos reales, mentores activos y comunidad." />
-    <title>EduTrack — Cursos de Tecnología para Devs Colombianos</title>
-    <link rel="stylesheet" href="css/style.css" />
+    <title>EduTrack — Panel de Gestión</title>
+
+    <link rel="stylesheet" href="../css/style.css" />
+    <link rel="stylesheet" href="../css/dashboard.css" />
+    <link rel="stylesheet" href="../css/estudiantes.css" />
+
+    <style>
+        /* ── Vistas (view router) ── */
+        .view {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.35s ease;
+        }
+
+        .view--active {
+            display: block;
+            opacity: 1;
+        }
+
+        .view--leaving {
+            display: block;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* El dashboard ocupa todo el alto */
+        #view-dashboard.view--active {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* ── LOGIN PAGE ── */
+        .login-page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--color-bg-base);
+            padding: 1.5rem;
+        }
+
+        .login-card {
+            background: var(--color-bg-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            padding: 2.5rem 2rem;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+        }
+
+        .login-logo {
+            font-family: var(--font-display);
+            font-weight: 800;
+            font-size: 1.75rem;
+            letter-spacing: -0.02em;
+            color: var(--color-text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .login-logo span {
+            color: var(--color-accent-primary);
+        }
+
+        .login-subtitle {
+            font-size: var(--fs-sm);
+            color: var(--color-text-muted);
+            margin-bottom: 2rem;
+        }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.1rem;
+        }
+
+        .login-label {
+            display: block;
+            font-size: var(--fs-xs);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--color-text-muted);
+            margin-bottom: 0.35rem;
+        }
+
+        .login-input {
+            width: 100%;
+            background: var(--color-bg-input);
+            border: 1px solid var(--color-border-input);
+            border-radius: var(--radius-md);
+            color: var(--color-text-primary);
+            font-family: var(--font-body);
+            font-size: var(--fs-sm);
+            padding: 0.7rem 1rem;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .login-input:focus {
+            outline: none;
+            border-color: var(--color-accent-primary);
+            box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.15);
+        }
+
+        .login-input.is-error {
+            border-color: var(--color-danger);
+        }
+
+        .login-error {
+            font-size: var(--fs-xs);
+            color: var(--color-danger);
+            margin-top: 0.25rem;
+            display: none;
+        }
+
+        .login-error.visible {
+            display: block;
+        }
+
+        .login-btn {
+            width: 100%;
+            justify-content: center;
+            padding: 0.8rem;
+            font-size: var(--fs-base);
+            margin-top: 0.5rem;
+        }
+
+        .login-hint {
+            font-size: var(--fs-xs);
+            color: var(--color-text-subtle);
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+        /* ── Secciones del dashboard (control de navegación) ── */
+        .db-section {
+            display: block;
+        }
+
+        .db-section--hidden {
+            display: none !important;
+        }
+
+        /* ── Mensaje "en construcción" para secciones vacías ── */
+        .placeholder-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 5rem 2rem;
+            text-align: center;
+            color: var(--color-text-muted);
+            gap: 1rem;
+        }
+
+        .placeholder-section__icon {
+            font-size: 3.5rem;
+            opacity: 0.3;
+        }
+
+        .placeholder-section__title {
+            font-family: var(--font-display);
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--color-text-primary);
+        }
+
+        .placeholder-section p {
+            font-size: var(--fs-sm);
+            max-width: 380px;
+        }
+
+        /* ── Corregir overflow del db-layout ── */
+        .db-layout {
+            min-height: 100vh;
+            position: relative;
+            background: var(--color-bg-base);
+            overflow-x: hidden;
+        }
+
+        /* Asegurar que el contenido no quede bajo el sidebar en desktop */
+        @media (min-width: 768px) {
+            .db-main {
+                margin-left: 240px;
+            }
+        }
+    </style>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
 </head>
 
 <body>
 
-    <header class="site-header">
-        <nav class="main-nav" aria-label="Navegación principal">
-            <a href="#hero" class="nav-logo">
-                <img src="https://placehold.co/36x36/F5A623/0D1117?text=ET" alt="EduTrack logotipo" width="36"
-                    height="36" class="nav-logo-icon" />
-                <span class="nav-logo-name">EduTrack</span>
-            </a>
-
-            <ul class="nav-links" role="list">
-                <li><a href="#courses">Cursos</a></li>
-                <li><a href="#why">¿Por qué EduTrack?</a></li>
-                <li><a href="#testimonials">Historias</a></li>
-                <li><a href="#stats">Estadísticas</a></li>
-            </ul>
-
-            <a href="#register" class="nav-cta">Regístrate gratis</a>
+    <div id="view-landing" class="view">
+        <nav class="navbar scrolled">
+            <div class="navbar__inner">
+                <div class="navbar__logo">Edu<span>Track</span></div>
+                <div class="nav-links">
+                    <a href="#hero">Inicio</a>
+                    <a href="#cursos-landing">Cursos</a>
+                    <a href="#features">Beneficios</a>
+                </div>
+                <button class="btn btn-primary" onclick="window.EduTrack.mostrarVista('login')">Iniciar Sesión</button>
+            </div>
         </nav>
-    </header>
 
-
-    <main>
-
-        <section id="hero" aria-labelledby="hero-heading">
-
+        <header id="hero">
             <div class="hero-content">
-                <div class="hero-eyebrow">
-                    <span class="hero-badge">🇨🇴 Hecho para devs colombianos</span>
-                </div>
-
-                <h1 id="hero-heading" class="hero-heading">
-                    Sube de nivel.<br />
-                    Consigue el trabajo<br />
-                    que mereces.
-                </h1>
-
-                <p class="hero-subheading">
-                    Cursos prácticos de tecnología para desarrolladores junior y mid en Colombia.
-                    Aprende de mentores activos, construye proyectos reales y da el
-                    siguiente paso en tu carrera.
-                </p>
-
-                <div class="hero-cta-group">
-                    <a href="#register" class="btn btn-primary">Empieza gratis hoy</a>
-                    <a href="#courses" class="btn btn-secondary">Ver cursos disponibles</a>
-                </div>
-
-                <div class="hero-social-proof">
-                    <div class="hero-avatars" aria-hidden="true">
-                        <img src="https://placehold.co/40x40/F5A623/0D1117?text=CM" alt="" width="40" height="40"
-                            class="avatar-img" />
-                        <img src="https://placehold.co/40x40/3B82F6/F0F6FC?text=VS" alt="" width="40" height="40"
-                            class="avatar-img" />
-                        <img src="https://placehold.co/40x40/22C55E/0D1117?text=DR" alt="" width="40" height="40"
-                            class="avatar-img" />
-                        <img src="https://placehold.co/40x40/8B5CF6/F0F6FC?text=LP" alt="" width="40" height="40"
-                            class="avatar-img" />
-                    </div>
-                    <p class="hero-proof-text">
-                        Más de <strong>1.200 desarrolladores</strong> ya están aprendiendo con EduTrack
-                    </p>
+                <h1>Aprende Tecnología con <span>EduTrack</span></h1>
+                <p>La plataforma líder en capacitación y monitoreo analítico de estudiantes. Potencia tus habilidades
+                    técnicas en desarrollo web, bases de datos y cloud computing de manera guiada.</p>
+                <div class="hero-cta">
+                    <button class="btn btn-primary" onclick="window.EduTrack.mostrarVista('login')">Acceder al Panel
+                        Administrativo →</button>
                 </div>
             </div>
+        </header>
 
-            <div class="hero-visual" aria-hidden="true">
-                <img src="https://placehold.co/580x480/161B22/3B82F6?text=Dashboard+EduTrack" alt="" width="580"
-                    height="480" class="hero-mockup" />
+        <section id="stats">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-item__number">+35</div>
+                    <div class="stat-item__label">Estudiantes Demo</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-item__number">100%</div>
+                    <div class="stat-item__label">Meta-Validado</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-item__number">8</div>
+                    <div class="stat-item__label">Cursos Oficiales</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-item__number">3</div>
+                    <div class="stat-item__label">Planes de Suscripción</div>
+                </div>
             </div>
-
         </section>
 
-
-        <section id="stats" aria-label="Estadísticas de EduTrack">
-
-            <ul class="stats-grid" role="list">
-
-                <li class="stat-item">
-                    <span class="stat-number">1.200<span class="stat-unit">+</span></span>
-                    <span class="stat-label">Estudiantes activos</span>
-                </li>
-
-                <li class="stat-item">
-                    <span class="stat-number">98<span class="stat-unit">%</span></span>
-                    <span class="stat-label">Satisfacción del estudiante</span>
-                </li>
-
-                <li class="stat-item">
-                    <span class="stat-number">40</span>
-                    <span class="stat-label">Cursos disponibles</span>
-                </li>
-
-                <li class="stat-item">
-                    <span class="stat-number">4.9<span class="stat-unit">★</span></span>
-                    <span class="stat-label">Calificación promedio</span>
-                </li>
-
-            </ul>
-
-        </section>
-
-
-        <section id="courses" aria-labelledby="courses-heading">
-
-            <div class="section-header">
-                <p class="section-label">Cursos destacados</p>
-                <h2 id="courses-heading" class="section-title">Elige tu ruta de aprendizaje</h2>
-                <p class="section-description">
-                    Todos los cursos incluyen proyectos reales, mentorías en vivo y
-                    certificado con valor empresarial en Colombia.
-                </p>
-            </div>
+        <section id="cursos-landing" class="landing-section">
+            <span class="section-label">Catálogo Especializado</span>
+            <h2 class="section-title">Nuestras Rutas Académicas</h2>
+            <p class="section-subtitle">Explora los programas diseñados bajo estrictos estándares de ingeniería para
+                llevar el conocimiento práctico a la interfaz de desarrollo.</p>
 
             <div class="courses-grid">
-
-                <article class="course-card">
-                    <header class="course-card-header">
-                        <img src="https://placehold.co/380x200/161B22/3B82F6?text=Full+Stack+Web"
-                            alt="Ilustración del curso Full Stack con React y Node.js" width="380" height="200"
-                            class="course-thumbnail" />
-                        <div class="course-meta-top">
-                            <span class="course-badge course-badge--web">Full Stack Web</span>
-                            <span class="course-level">Intermedio</span>
-                        </div>
-                    </header>
-
+                <div class="course-card">
                     <div class="course-body">
-                        <h3 class="course-title">Desarrollo Full Stack con React &amp; Node.js</h3>
-                        <p class="course-description">
-                            Construye aplicaciones web completas. Frontend moderno con React,
-                            APIs REST robustas con Node.js y despliegue en AWS.
-                        </p>
-                        <ul class="course-tags" role="list" aria-label="Tecnologías del curso">
-                            <li class="course-tag">React</li>
-                            <li class="course-tag">Node.js</li>
-                            <li class="course-tag">PostgreSQL</li>
-                            <li class="course-tag">AWS</li>
-                        </ul>
+                        <span class="course-badge course-badge--web">Desarrollo Web</span>
+                        <h3>Full Stack Developer</h3>
+                        <p>Domina la arquitectura cliente-servidor con JavaScript Vanilla, layouts avanzados y bases de
+                            datos estructuradas.</p>
                     </div>
-
-                    <footer class="course-card-footer">
-                        <div class="course-stats">
-                            <span class="course-rating" aria-label="Calificación 4.9 de 5">★ 4.9 (523)</span>
-                            <span class="course-duration" aria-label="Duración 48 horas">⏱ 48 hrs</span>
-                            <span class="course-students" aria-label="2.300 estudiantes">👥 2.3K</span>
-                        </div>
-                        <a href="#register" class="btn btn-primary btn--sm">Inscribirme</a>
+                    <footer>
+                        <span>Duración: 16 semanas</span>
+                        <strong>Premium</strong>
                     </footer>
-                </article>
-
-                <article class="course-card">
-                    <header class="course-card-header">
-                        <img src="https://placehold.co/380x200/161B22/F5A623?text=Python+%26+Data+Science"
-                            alt="Ilustración del curso Python y Data Science" width="380" height="200"
-                            class="course-thumbnail" />
-                        <div class="course-meta-top">
-                            <span class="course-badge course-badge--data">Data Science</span>
-                            <span class="course-level">Básico → Avanzado</span>
-                        </div>
-                    </header>
-
+                </div>
+                <div class="course-card">
                     <div class="course-body">
-                        <h3 class="course-title">Python &amp; Data Science para Ingenieros</h3>
-                        <p class="course-description">
-                            De cero a Machine Learning. Domina pandas, visualización de datos
-                            y modelos predictivos con datasets reales de industria colombiana.
-                        </p>
-                        <ul class="course-tags" role="list" aria-label="Tecnologías del curso">
-                            <li class="course-tag">Python</li>
-                            <li class="course-tag">Pandas</li>
-                            <li class="course-tag">scikit-learn</li>
-                            <li class="course-tag">TensorFlow</li>
-                        </ul>
+                        <span class="course-badge course-badge--data">Data Science</span>
+                        <h3>Python & Data Science</h3>
+                        <p>Análisis estadístico, automatización de datos y manipulación de entornos analíticos complejos
+                            de negocio.</p>
                     </div>
-
-                    <footer class="course-card-footer">
-                        <div class="course-stats">
-                            <span class="course-rating" aria-label="Calificación 4.8 de 5">★ 4.8 (412)</span>
-                            <span class="course-duration" aria-label="Duración 36 horas">⏱ 36 hrs</span>
-                            <span class="course-students" aria-label="1.800 estudiantes">👥 1.8K</span>
-                        </div>
-                        <a href="#register" class="btn btn-primary btn--sm">Inscribirme</a>
+                    <footer>
+                        <span>Duración: 12 semanas</span>
+                        <strong>Estándar</strong>
                     </footer>
-                </article>
-
-                <article class="course-card">
-                    <header class="course-card-header">
-                        <img src="https://placehold.co/380x200/161B22/8B5CF6?text=DevOps+%26+Cloud"
-                            alt="Ilustración del curso DevOps y Cloud con AWS" width="380" height="200"
-                            class="course-thumbnail" />
-                        <div class="course-meta-top">
-                            <span class="course-badge course-badge--devops">DevOps &amp; Cloud</span>
-                            <span class="course-level">Intermedio</span>
-                        </div>
-                    </header>
-
+                </div>
+                <div class="course-card">
                     <div class="course-body">
-                        <h3 class="course-title">DevOps Moderno: Docker, CI/CD &amp; AWS</h3>
-                        <p class="course-description">
-                            Automatiza despliegues, construye pipelines robustos y administra
-                            infraestructura en la nube. Las habilidades más demandadas del mercado.
-                        </p>
-                        <ul class="course-tags" role="list" aria-label="Tecnologías del curso">
-                            <li class="course-tag">Docker</li>
-                            <li class="course-tag">Kubernetes</li>
-                            <li class="course-tag">GitHub Actions</li>
-                            <li class="course-tag">Terraform</li>
-                        </ul>
+                        <span class="course-badge course-badge--devops">Cloud</span>
+                        <h3>DevOps y Cloud Computing</h3>
+                        <p>Orquestación de entornos, optimización de servidores Linux y despliegue continuo de
+                            aplicaciones estables.</p>
                     </div>
-
-                    <footer class="course-card-footer">
-                        <div class="course-stats">
-                            <span class="course-rating" aria-label="Calificación 4.9 de 5">★ 4.9 (287)</span>
-                            <span class="course-duration" aria-label="Duración 42 horas">⏱ 42 hrs</span>
-                            <span class="course-students" aria-label="1.100 estudiantes">👥 1.1K</span>
-                        </div>
-                        <a href="#register" class="btn btn-primary btn--sm">Inscribirme</a>
+                    <footer>
+                        <span>Duración: 14 semanas</span>
+                        <strong>Premium</strong>
                     </footer>
-                </article>
-
-                <article class="course-card">
-                    <header class="course-card-header">
-                        <img src="https://placehold.co/380x200/161B22/22C55E?text=React+Native"
-                            alt="Ilustración del curso Desarrollo Móvil con React Native" width="380" height="200"
-                            class="course-thumbnail" />
-                        <div class="course-meta-top">
-                            <span class="course-badge course-badge--mobile">Mobile Dev</span>
-                            <span class="course-level">Intermedio</span>
-                        </div>
-                    </header>
-
+                </div>
+                <div class="course-card">
                     <div class="course-body">
-                        <h3 class="course-title">Desarrollo Móvil con React Native</h3>
-                        <p class="course-description">
-                            Un solo codebase, iOS y Android. Publica en las tiendas con
-                            React Native. Incluye APIs, push notifications y monetización.
-                        </p>
-                        <ul class="course-tags" role="list" aria-label="Tecnologías del curso">
-                            <li class="course-tag">React Native</li>
-                            <li class="course-tag">Expo</li>
-                            <li class="course-tag">TypeScript</li>
-                            <li class="course-tag">Firebase</li>
-                        </ul>
+                        <span class="course-badge course-badge--mobile">Mobile</span>
+                        <h3>React Native Desarrollo</h3>
+                        <p>Construcción avanzada de aplicaciones para múltiples plataformas usando esquemas y
+                            optimizaciones nativas.</p>
                     </div>
-
-                    <footer class="course-card-footer">
-                        <div class="course-stats">
-                            <span class="course-rating" aria-label="Calificación 4.7 de 5">★ 4.7 (198)</span>
-                            <span class="course-duration" aria-label="Duración 30 horas">⏱ 30 hrs</span>
-                            <span class="course-students" aria-label="890 estudiantes">👥 890</span>
-                        </div>
-                        <a href="#register" class="btn btn-primary btn--sm">Inscribirme</a>
+                    <footer>
+                        <span>Duración: 10 semanas</span>
+                        <strong>Básico</strong>
                     </footer>
-                </article>
-
+                </div>
             </div>
-
-            <div class="courses-footer">
-                <a href="#register" class="btn btn-secondary">Ver los 40 cursos disponibles →</a>
-            </div>
-
         </section>
 
+        <section id="features" class="landing-section">
+            <span class="section-label">Ventajas operativas</span>
+            <h2 class="section-title">Por qué administrar con EduTrack</h2>
+            <p class="section-subtitle">Garantizamos una visualización analítica libre de frameworks, veloz y
+                completamente modular.</p>
 
-        <section id="why" aria-labelledby="why-heading">
-
-            <div class="section-header">
-                <p class="section-label">Por qué EduTrack</p>
-                <h2 id="why-heading" class="section-title">Aprendizaje que realmente funciona</h2>
-                <p class="section-description">
-                    No más teoría sin aplicación. No más cursos genéricos en inglés.
-                    EduTrack está construido para el contexto y el mercado laboral colombiano.
-                </p>
+            <div class="features-grid">
+                <div class="feature-item">
+                    <div class="feature-icon">📊</div>
+                    <h3>Control Analítico (KPIs)</h3>
+                    <p>Monitoreo inmediato de ingresos generados, estudiantes activos y promedios generales calculados
+                        dinámicamente.</p>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">🛡️</div>
+                    <h3>Meta-Validación Rigurosa</h3>
+                    <p>Filtros estricto que aíslan datos corruptos, detectan duplicidades y asocian coherentemente
+                        planes con montos reales.</p>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">🚪</div>
+                    <h3>Control de Sesión SPA</h3>
+                    <p>Enrutamiento reactivo que cambia de entorno de forma fluida mediante animaciones integradas y
+                        seguras.</p>
+                </div>
             </div>
-
-            <ul class="features-grid" role="list">
-
-                <li class="feature-item">
-                    <div class="feature-icon" aria-hidden="true">🔨</div>
-                    <h3 class="feature-title">Aprende haciendo</h3>
-                    <p class="feature-description">
-                        Cada módulo incluye proyectos reales que puedes agregar a tu portafolio
-                        desde el primer día. No vídeos de seis horas que olvidarás mañana.
-                    </p>
-                </li>
-
-                <li class="feature-item">
-                    <div class="feature-icon" aria-hidden="true">🧑‍💻</div>
-                    <h3 class="feature-title">Mentores que trabajan hoy</h3>
-                    <p class="feature-description">
-                        Aprende de desarrolladores senior colombianos activos en Rappi,
-                        Bancolombia, Globant y los unicornios tech más grandes de LATAM.
-                    </p>
-                </li>
-
-                <li class="feature-item">
-                    <div class="feature-icon" aria-hidden="true">🚀</div>
-                    <h3 class="feature-title">Comunidad que impulsa</h3>
-                    <p class="feature-description">
-                        Red de más de 1.200 devs colombianos para networking, resolver dudas
-                        y encontrar tu próxima oportunidad laboral antes de terminar el curso.
-                    </p>
-                </li>
-
-                <li class="feature-item">
-                    <div class="feature-icon" aria-hidden="true">🏆</div>
-                    <h3 class="feature-title">Certificados con valor real</h3>
-                    <p class="feature-description">
-                        Nuestros certificados son reconocidos por más de 300 empresas aliadas
-                        en Colombia. Un diferencial concreto en tu hoja de vida.
-                    </p>
-                </li>
-
-                <li class="feature-item">
-                    <div class="feature-icon" aria-hidden="true">📅</div>
-                    <h3 class="feature-title">A tu ritmo, sin excusas</h3>
-                    <p class="feature-description">
-                        Contenido asíncrono accesible desde cualquier dispositivo, más sesiones
-                        en vivo opcionales cada semana. Compatible con trabajo full-time.
-                    </p>
-                </li>
-
-                <li class="feature-item">
-                    <div class="feature-icon" aria-hidden="true">💰</div>
-                    <h3 class="feature-title">Precio pensado para LATAM</h3>
-                    <p class="feature-description">
-                        Sin cobros en dólares ni precios importados. Planes en pesos colombianos,
-                        con opciones de pago flexibles y becas para quienes más las necesitan.
-                    </p>
-                </li>
-
-            </ul>
-
         </section>
 
-
-        <section id="testimonials" aria-labelledby="testimonials-heading">
-
-            <div class="section-header">
-                <p class="section-label">Historias reales</p>
-                <h2 id="testimonials-heading" class="section-title">Devs que ya dieron el salto</h2>
-                <p class="section-description">
-                    No te lo decimos nosotros. Te lo dicen los desarrolladores colombianos
-                    que usaron EduTrack para cambiar su carrera.
-                </p>
+        <footer class="site-footer">
+            <div class="footer-bottom">
+                <p>&copy; 2026 EduTrack. Panel de Gestión Educativa Independiente.</p>
+                <p>Construido con HTML Semántico, CSS Puro y JS Vanilla.</p>
             </div>
+        </footer>
+    </div>
 
-            <div class="testimonials-grid">
+    <div id="view-login" class="view">
+        <div class="login-page">
+            <div class="login-card">
 
-                <blockquote class="testimonial">
-                    <div class="testimonial-stars" aria-label="5 de 5 estrellas">★★★★★</div>
-                    <p class="testimonial-quote">
-                        "Pasé de vendedor a desarrollador frontend en 8 meses. El curso de
-                        Full Stack me dio los proyectos que necesitaba para mi portafolio.
-                        EduTrack literalmente me cambió la vida."
-                    </p>
-                    <footer class="testimonial-author">
-                        <img src="https://placehold.co/48x48/F5A623/0D1117?text=CM" alt="Foto de Carlos Muñoz"
-                            width="48" height="48" class="testimonial-avatar" />
-                        <div class="testimonial-author-info">
-                            <cite class="testimonial-name">Carlos Muñoz</cite>
-                            <span class="testimonial-role">Frontend Developer en Rappi · Medellín</span>
-                        </div>
-                    </footer>
-                </blockquote>
+                <p class="login-logo">Edu<span>Track</span></p>
+                <p class="login-subtitle">Panel administrativo · Inicia sesión para continuar</p>
 
-                <blockquote class="testimonial">
-                    <div class="testimonial-stars" aria-label="5 de 5 estrellas">★★★★★</div>
-                    <p class="testimonial-quote">
-                        "En la entrevista de Bancolombia me preguntaron específicamente por
-                        el proyecto que hice en el curso. Lo construí en EduTrack, lo puse
-                        en mi portafolio y consiguió el trabajo en tres semanas."
-                    </p>
-                    <footer class="testimonial-author">
-                        <img src="https://placehold.co/48x48/3B82F6/F0F6FC?text=VS" alt="Foto de Valentina Suárez"
-                            width="48" height="48" class="testimonial-avatar" />
-                        <div class="testimonial-author-info">
-                            <cite class="testimonial-name">Valentina Suárez</cite>
-                            <span class="testimonial-role">Full Stack Engineer en Bancolombia · Bogotá</span>
-                        </div>
-                    </footer>
-                </blockquote>
+                <form id="formLogin" class="login-form" novalidate autocomplete="off">
 
-                <blockquote class="testimonial">
-                    <div class="testimonial-stars" aria-label="5 de 5 estrellas">★★★★★</div>
-                    <p class="testimonial-quote">
-                        "La comunidad de EduTrack es lo mejor. Conseguí mi primer cliente
-                        freelance antes de terminar el curso de React Native gracias a un
-                        contacto del Discord. Vale cada peso del plan Pro."
-                    </p>
-                    <footer class="testimonial-author">
-                        <img src="https://placehold.co/48x48/22C55E/0D1117?text=DR" alt="Foto de Diego Rincón"
-                            width="48" height="48" class="testimonial-avatar" />
-                        <div class="testimonial-author-info">
-                            <cite class="testimonial-name">Diego Rincón</cite>
-                            <span class="testimonial-role">Mobile Dev Freelance · Cali</span>
-                        </div>
-                    </footer>
-                </blockquote>
-
-            </div>
-
-        </section>
-
-
-        <section id="register" aria-labelledby="register-heading">
-
-            <div class="register-content">
-                <p class="section-label">Empieza hoy</p>
-                <h2 id="register-heading" class="section-title">
-                    Tu próxima oportunidad laboral<br />empieza con un registro
-                </h2>
-                <p class="section-description">
-                    Crea tu cuenta gratis en menos de dos minutos. Sin tarjeta de crédito.
-                    Cancela cuando quieras.
-                </p>
-
-                <ul class="register-benefits" role="list">
-                    <li class="register-benefit">✓ Acceso inmediato a 5 cursos gratuitos</li>
-                    <li class="register-benefit">✓ Comunidad de +1.200 devs colombianos</li>
-                    <li class="register-benefit">✓ Diagnóstico gratuito de habilidades</li>
-                </ul>
-            </div>
-
-            <form id="register-form" class="register-form" action="#" method="POST" novalidate
-                aria-label="Formulario de registro en EduTrack">
-                <fieldset class="form-fieldset">
-                    <legend class="form-legend">Crea tu cuenta gratuita</legend>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="first-name" class="form-label">Nombre</label>
-                            <input type="text" id="first-name" name="first-name" class="form-input" placeholder="Carlos"
-                                autocomplete="given-name" required />
-                        </div>
-                        <div class="form-group">
-                            <label for="last-name" class="form-label">Apellido</label>
-                            <input type="text" id="last-name" name="last-name" class="form-input" placeholder="Muñoz"
-                                autocomplete="family-name" required />
-                        </div>
+                    <div>
+                        <label class="login-label" for="loginNombre">Usuario</label>
+                        <input type="text" id="loginNombre" class="login-input" placeholder="Tu nombre de usuario"
+                            autocomplete="username" value="admin" />
+                        <p id="loginNombreError" class="login-error"></p>
                     </div>
 
-                    <div class="form-group">
-                        <label for="email" class="form-label">Correo electrónico</label>
-                        <input type="email" id="email" name="email" class="form-input" placeholder="carlos@ejemplo.com"
-                            autocomplete="email" required />
+                    <div>
+                        <label class="login-label" for="loginPassword">Contraseña</label>
+                        <input type="password" id="loginPassword" class="login-input" placeholder="••••••••"
+                            autocomplete="current-password" value="123456" />
+                        <p id="loginPasswordError" class="login-error"></p>
                     </div>
 
-                    <div class="form-group">
-                        <label for="experience-level" class="form-label">Nivel de experiencia</label>
-                        <select id="experience-level" name="experience-level" class="form-select" required>
-                            <option value="" disabled selected>Selecciona tu nivel actual</option>
-                            <option value="junior">Junior (0–2 años de experiencia)</option>
-                            <option value="mid">Mid (2–5 años de experiencia)</option>
-                            <option value="other">Otro / Estoy comenzando desde cero</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="interest-area" class="form-label">Área de interés</label>
-                        <select id="interest-area" name="interest-area" class="form-select" required>
-                            <option value="" disabled selected>¿En qué quieres especializarte?</option>
-                            <option value="fullstack">Desarrollo Full Stack Web</option>
-                            <option value="data">Data Science &amp; Machine Learning</option>
-                            <option value="devops">DevOps &amp; Cloud</option>
-                            <option value="mobile">Desarrollo Móvil</option>
-                            <option value="not-sure">Aún no lo sé, quiero orientación</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group form-group--checkbox">
-                        <label class="form-checkbox-label">
-                            <input type="checkbox" id="terms" name="terms" class="form-checkbox" required />
-                            <span>
-                                Acepto los
-                                <a href="#" class="form-link">términos y condiciones</a>
-                                y la
-                                <a href="#" class="form-link">política de privacidad</a>
-                                de EduTrack.
-                            </span>
-                        </label>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary btn--full">
-                        Crear mi cuenta gratis →
+                    <button type="submit" class="btn btn-primary login-btn">
+                        Iniciar sesión →
                     </button>
 
-                    <p class="form-disclaimer">
-                        Sin tarjeta de crédito · Cancela cuando quieras · Soporte en español
-                    </p>
+                </form>
 
-                </fieldset>
-            </form>
+                <p class="login-hint">Datos predeterminados inyectados para el entorno Demo.</p>
 
-        </section>
-
-    </main>
-
-
-    <footer class="site-footer">
-
-        <div class="footer-grid">
-
-            <div class="footer-brand">
-                <a href="#hero" class="footer-logo">
-                    <img src="https://placehold.co/32x32/F5A623/0D1117?text=ET" alt="EduTrack logotipo" width="32"
-                        height="32" />
-                    <span>EduTrack</span>
-                </a>
-                <p class="footer-tagline">
-                    Cursos de tecnología en español para desarrolladores colombianos que
-                    quieren crecer profesionalmente y conseguir mejores oportunidades.
-                </p>
-                <ul class="footer-social" role="list" aria-label="Redes sociales">
-                    <li><a href="#" aria-label="LinkedIn de EduTrack">LinkedIn</a></li>
-                    <li><a href="#" aria-label="Twitter de EduTrack">Twitter / X</a></li>
-                    <li><a href="#" aria-label="Discord de EduTrack">Discord</a></li>
-                    <li><a href="#" aria-label="YouTube de EduTrack">YouTube</a></li>
-                </ul>
             </div>
-
-            <nav class="footer-nav" aria-label="Navegación del footer — Aprender">
-                <h3 class="footer-nav-heading">Aprender</h3>
-                <ul class="footer-nav-links" role="list">
-                    <li><a href="#">Todos los cursos</a></li>
-                    <li><a href="#">Rutas de aprendizaje</a></li>
-                    <li><a href="#">Proyectos prácticos</a></li>
-                    <li><a href="#">Certificados</a></li>
-                    <li><a href="#">Mentorías en vivo</a></li>
-                </ul>
-            </nav>
-
-            <nav class="footer-nav" aria-label="Navegación del footer — Empresa">
-                <h3 class="footer-nav-heading">Empresa</h3>
-                <ul class="footer-nav-links" role="list">
-                    <li><a href="#">Sobre EduTrack</a></li>
-                    <li><a href="#">Blog</a></li>
-                    <li><a href="#">Trabaja con nosotros</a></li>
-                    <li><a href="#">Para empresas</a></li>
-                    <li><a href="#">Prensa</a></li>
-                </ul>
-            </nav>
-
-            <nav class="footer-nav" aria-label="Navegación del footer — Soporte">
-                <h3 class="footer-nav-heading">Soporte</h3>
-                <ul class="footer-nav-links" role="list">
-                    <li><a href="#">Centro de ayuda</a></li>
-                    <li><a href="#">Comunidad Discord</a></li>
-                    <li><a href="#">Contacto</a></li>
-                    <li><a href="#">Términos de uso</a></li>
-                    <li><a href="#">Política de privacidad</a></li>
-                </ul>
-            </nav>
-
         </div>
+    </div>
 
-        <div class="footer-bottom">
-            <p class="footer-copyright">
-                🇨🇴 Hecho con orgullo en Colombia &mdash; &copy; 2025 EduTrack SAS · Bogotá, Colombia
-            </p>
-            <p class="footer-legal">
-                Todos los derechos reservados. EduTrack SAS, NIT 901.234.567-8
-            </p>
+
+    <div id="view-dashboard" class="view">
+        <div class="db-layout">
+
+            <aside id="sidebar" class="db-sidebar" role="navigation" aria-label="Menú principal del dashboard">
+
+                <div class="db-sidebar__logo">
+                    <span class="db-sidebar__logo-name">
+                        Edu<span style="color:var(--color-accent-primary)">Track</span>
+                    </span>
+                </div>
+
+                <nav class="db-sidebar__nav" aria-label="Secciones">
+                    <ul class="db-sidebar__nav-list">
+                        <li class="db-sidebar__nav-item">
+                            <a href="#" class="db-sidebar__nav-link db-sidebar__nav-link--active"
+                                data-section="dashboard" aria-current="page">
+                                <span class="db-sidebar__nav-icon">📊</span> Dashboard
+                            </a>
+                        </li>
+                        <li class="db-sidebar__nav-item">
+                            <a href="#" class="db-sidebar__nav-link" data-section="estudiantes">
+                                <span class="db-sidebar__nav-icon">👥</span> Estudiantes
+                            </a>
+                        </li>
+                        <li class="db-sidebar__nav-item">
+                            <a href="#" class="db-sidebar__nav-link" data-section="cursos">
+                                <span class="db-sidebar__nav-icon">📚</span> Cursos
+                            </a>
+                        </li>
+                        <li class="db-sidebar__nav-item">
+                            <a href="#" class="db-sidebar__nav-link" data-section="reportes">
+                                <span class="db-sidebar__nav-icon">📈</span> Reportes
+                            </a>
+                        </li>
+                        <li class="db-sidebar__nav-item">
+                            <a href="#" class="db-sidebar__nav-link" data-section="configuracion">
+                                <span class="db-sidebar__nav-icon">⚙️</span> Configuración
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+
+                <hr class="db-sidebar__divider" />
+
+                <div class="db-sidebar__user">
+                    <div class="db-sidebar__user-avatar" id="sidebarAvatar" aria-hidden="true">E</div>
+                    <div class="db-sidebar__user-info">
+                        <p class="db-sidebar__user-name" id="sidebarNombre">Estudiante</p>
+                        <p class="db-sidebar__user-role" id="sidebarRol">Administrador</p>
+                    </div>
+                </div>
+
+                <button id="btnLogout" class="db-sidebar__logout" aria-label="Cerrar sesión">
+                    🚪 Cerrar sesión
+                </button>
+
+            </aside>
+            <div id="sidebarOverlay" class="db-overlay" aria-hidden="true"></div>
+
+            <main class="db-main">
+
+                <header class="db-topbar">
+                    <button id="btnHamburger" class="db-hamburger" aria-label="Abrir menú" aria-expanded="false"
+                        aria-controls="sidebar">
+                        <span class="db-hamburger__bar"></span>
+                        <span class="db-hamburger__bar"></span>
+                        <span class="db-hamburger__bar"></span>
+                    </button>
+
+                    <div class="db-topbar__greeting">
+                        <p class="db-topbar__title">
+                            Hola, <span class="db-topbar__name" id="greetingNombre">Estudiante</span> 👋
+                        </p>
+                        <p class="db-topbar__date" id="topbarFecha"></p>
+                    </div>
+
+                    <div class="db-topbar__actions">
+                        <button id="btnNotificaciones" class="db-topbar__icon-btn" aria-label="Notificaciones">
+                            🔔
+                            <span class="db-topbar__notif-dot" aria-hidden="true"></span>
+                        </button>
+                    </div>
+                </header>
+                <div class="db-content">
+
+                    <div id="secDashboard" class="db-section">
+
+                        <section class="db-kpi-section" aria-label="Indicadores clave">
+                            <p class="db-section-label">Resumen general</p>
+                            <div class="db-kpi-grid">
+
+                                <article class="db-kpi-card db-kpi-card--yellow" aria-label="Estudiantes activos">
+                                    <div class="db-kpi-card__header">
+                                        <div class="db-kpi-card__icon-wrap db-kpi-card__icon-wrap--yellow"
+                                            aria-hidden="true">📚</div>
+                                        <span class="db-kpi-card__badge db-kpi-card__badge--orange">En curso</span>
+                                    </div>
+                                    <div class="db-kpi-card__body">
+                                        <p class="db-kpi-card__label">Estudiantes activos</p>
+                                        <p class="db-kpi-card__value" id="kpiCursos">—</p>
+                                    </div>
+                                    <div class="db-kpi-card__footer">
+                                        <span class="db-kpi-card__delta db-kpi-card__delta--up">↑ 3</span>
+                                        <span class="db-kpi-card__delta-label">vs mes anterior</span>
+                                    </div>
+                                </article>
+
+                                <article class="db-kpi-card db-kpi-card--blue" aria-label="Progreso promedio"
+                                    role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                                    <div class="db-kpi-card__header">
+                                        <div class="db-kpi-card__icon-wrap db-kpi-card__icon-wrap--blue"
+                                            aria-hidden="true">📈</div>
+                                        <span class="db-kpi-card__badge db-kpi-card__badge--blue">Promedio</span>
+                                    </div>
+                                    <div class="db-kpi-card__body">
+                                        <p class="db-kpi-card__label">Progreso promedio</p>
+                                        <p class="db-kpi-card__value" id="kpiProgreso">—</p>
+                                        <div class="db-kpi-progress">
+                                            <div class="db-kpi-progress__track">
+                                                <div class="db-kpi-progress__fill" id="kpiProgresoBar"
+                                                    style="--progress-value:0%; --kpi-pct:0%"></div>
+                                            </div>
+                                            <div class="db-kpi-progress__labels">
+                                                <span>0%</span><span>100%</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="db-kpi-card__footer">
+                                        <span class="db-kpi-card__delta db-kpi-card__delta--up">↑ 5%</span>
+                                        <span class="db-kpi-card__delta-label">vs mes anterior</span>
+                                    </div>
+                                </article>
+
+                                <article class="db-kpi-card db-kpi-card--purple" aria-label="Total de estudiantes">
+                                    <div class="db-kpi-card__header">
+                                        <div class="db-kpi-card__icon-wrap db-kpi-card__icon-wrap--purple"
+                                            aria-hidden="true">👥</div>
+                                        <span class="db-kpi-card__badge db-kpi-card__badge--blue">Total</span>
+                                    </div>
+                                    <div class="db-kpi-card__body">
+                                        <p class="db-kpi-card__label">Total estudiantes</p>
+                                        <p class="db-kpi-card__value" id="kpiTotal">—</p>
+                                    </div>
+                                    <div class="db-kpi-card__footer">
+                                        <span class="db-kpi-card__delta db-kpi-card__delta--up">↑ 8</span>
+                                        <span class="db-kpi-card__delta-label">vs mes anterior</span>
+                                    </div>
+                                </article>
+
+                            </div>
+                        </section>
+
+                        <section class="chart-section" aria-label="Distribución por ciudad" style="margin-top:2rem;">
+                            <h3 class="chart-section__title">
+                                Estudiantes por ciudad
+                                <span>— distribución geográfica</span>
+                            </h3>
+                            <div class="chart-canvas-wrap">
+                                <canvas id="ciudadesChart"></canvas>
+                            </div>
+                        </section>
+
+                    </div>
+                    <div id="secEstudiantes" class="db-section db-section--hidden">
+
+                        <header class="page-header">
+                            <div>
+                                <h2 class="page-header__title">Gestión de <span>Estudiantes</span></h2>
+                                <p class="page-header__meta">EduTrack · Panel Administrativo</p>
+                            </div>
+                            <button id="btnAgregarEstudiante" class="btn btn-primary">
+                                ＋ Agregar Estudiante
+                            </button>
+                        </header>
+
+                        <div class="toolbar" role="search" aria-label="Filtros de estudiantes">
+                            <div class="toolbar__search-wrap">
+                                <span class="toolbar__search-icon" aria-hidden="true">🔍</span>
+                                <input type="text" id="searchInput" placeholder="Buscar por nombre o email…"
+                                    autocomplete="off" aria-label="Buscar estudiante" />
+                            </div>
+                            <div class="toolbar__select-wrap">
+                                <select id="filterCiudad" aria-label="Filtrar por ciudad">
+                                    <option value="">Todas las ciudades</option>
+                                </select>
+                            </div>
+                            <div class="toolbar__select-wrap">
+                                <select id="filterPlan" aria-label="Filtrar por plan">
+                                    <option value="">Todos los planes</option>
+                                    <option value="Básico">Básico</option>
+                                    <option value="Estándar">Estándar</option>
+                                    <option value="Premium">Premium</option>
+                                </select>
+                            </div>
+                            <div class="toolbar__select-wrap">
+                                <select id="filterEstado" aria-label="Filtrar por estado">
+                                    <option value="">Todos los estados</option>
+                                    <option value="activo">Activos</option>
+                                    <option value="inactivo">Inactivos</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="results-bar">
+                            <span id="resultsCount" class="results-bar__count"></span>
+                            <button id="btnResetFiltros" class="results-bar__reset" type="button">
+                                Limpiar filtros
+                            </button>
+                        </div>
+
+                        <div id="studentsGrid" class="students-grid" aria-label="Listado de estudiantes"
+                            aria-live="polite">
+                        </div>
+
+                    </div>
+                    <div id="secCursos" class="db-section db-section--hidden">
+                        <div class="placeholder-section">
+                            <div class="placeholder-section__icon">📚</div>
+                            <p class="placeholder-section__title">Cursos</p>
+                            <p>El catálogo de cursos está en desarrollo. Aquí podrás gestionar todos los cursos de
+                                EduTrack.</p>
+                        </div>
+                    </div>
+
+                    <div id="secReportes" class="db-section db-section--hidden">
+                        <div class="placeholder-section">
+                            <div class="placeholder-section__icon">📈</div>
+                            <p class="placeholder-section__title">Reportes</p>
+                            <p>Los reportes analíticos estarán disponibles próximamente.</p>
+                        </div>
+                    </div>
+
+                    <div id="secConfiguracion" class="db-section db-section--hidden">
+                        <div class="placeholder-section">
+                            <div class="placeholder-section__icon">⚙️</div>
+                            <p class="placeholder-section__title">Configuración</p>
+                            <p>Ajustes del sistema y preferencias de la plataforma.</p>
+                        </div>
+                    </div>
+
+                </div>
+            </main>
         </div>
+    </div>
+    <div id="modalOverlay" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modalTitulo">
+        <div class="modal">
+            <div class="modal__header">
+                <h2 class="modal__title" id="modalTitulo">Agregar Estudiante</h2>
+                <button class="modal__close" onclick="EduTrack.cerrarModal()" aria-label="Cerrar">✕</button>
+            </div>
+            <form id="formEstudiante" class="form-modal" novalidate>
+                <fieldset style="border:none;padding:0;margin:0;display:contents;">
+                    <legend class="sr-only">Datos del estudiante</legend>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="fNombre">Nombre</label>
+                            <input type="text" id="fNombre" placeholder="Juan" autocomplete="given-name" />
+                            <span class="form-group__error" aria-live="polite"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="fApellido">Apellido</label>
+                            <input type="text" id="fApellido" placeholder="Pérez" autocomplete="family-name" />
+                            <span class="form-group__error" aria-live="polite"></span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="fEmail">Email</label>
+                        <input type="email" id="fEmail" placeholder="juan.perez@gmail.com" autocomplete="email" />
+                        <span class="form-group__error" aria-live="polite"></span>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="fCiudad">Ciudad</label>
+                            <select id="fCiudad">
+                                <option value="">Seleccionar…</option>
+                                <option>Bogotá</option>
+                                <option>Medellín</option>
+                                <option>Cali</option>
+                                <option>Barranquilla</option>
+                                <option>Cartagena</option>
+                                <option>Bucaramanga</option>
+                                <option>Pereira</option>
+                                <option>Manizales</option>
+                                <option>Santa Marta</option>
+                                <option>Cúcuta</option>
+                            </select>
+                            <span class="form-group__error" aria-live="polite"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="fCurso">Curso</label>
+                            <select id="fCurso">
+                                <option value="">Seleccionar…</option>
+                                <option>Desarrollo Web</option>
+                                <option>Diseño UX/UI</option>
+                                <option>Marketing Digital</option>
+                                <option>Python y Data Science</option>
+                                <option>Full Stack Web</option>
+                                <option>DevOps y Cloud</option>
+                                <option>React Native</option>
+                                <option>SQL y Bases de Datos</option>
+                            </select>
+                            <span class="form-group__error" aria-live="polite"></span>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="fPlan">Plan</label>
+                            <select id="fPlan">
+                                <option value="">Seleccionar…</option>
+                                <option value="Básico">Básico — $29.99</option>
+                                <option value="Estándar">Estándar — $59.99</option>
+                                <option value="Premium">Premium — $99.99</option>
+                            </select>
+                            <span class="form-group__error" aria-live="polite"></span>
+                            <span id="fMontoDisplay"
+                                style="font-size:.72rem;color:var(--color-accent-primary);margin-top:.2rem;display:block;"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="fFecha">Fecha de inscripción</label>
+                            <input type="date" id="fFecha" />
+                            <span class="form-group__error" aria-live="polite"></span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="fProgreso">Progreso del curso</label>
+                        <div class="progress-slider-wrap">
+                            <input type="range" id="fProgreso" min="0" max="100" step="1" value="0" />
+                            <span id="fProgresoVal" class="progress-value-display">0%</span>
+                        </div>
+                        <span class="form-group__error" aria-live="polite"></span>
+                    </div>
+                    <label class="checkbox-group">
+                        <input type="checkbox" id="fActivo" checked />
+                        Estudiante activo
+                    </label>
+                </fieldset>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="EduTrack.cerrarModal()">Cancelar</button>
+                    <button type="button" class="btn btn-primary"
+                        onclick="EduTrack.guardarEstudiante()">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-    </footer>
 
-    <a href="https://wa.me/573000000000?text=Hola,%20quiero%20más%20información%20sobre%20los%20cursos"
-        class="whatsapp-btn" target="_blank" rel="noopener noreferrer" aria-label="Chatear por WhatsApp">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" width="30" height="30" fill="currentColor">
-            <path
-                d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7 .9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z" />
-        </svg>
-    </a>
+    <div id="confirmOverlay" class="confirm-overlay" role="alertdialog" aria-modal="true"
+        aria-labelledby="confirmTitulo">
+        <div class="confirm-box">
+            <div class="confirm-box__icon" aria-hidden="true">⚠️</div>
+            <h3 class="confirm-box__title" id="confirmTitulo">¿Eliminar?</h3>
+            <p class="confirm-box__msg" id="confirmMsg"></p>
+            <div class="confirm-actions">
+                <button class="btn btn-secondary" onclick="EduTrack.cerrarConfirm()">Cancelar</button>
+                <button class="btn btn-danger" onclick="EduTrack.ejecutarConfirm()">Sí, eliminar</button>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+
+    <script src="../js/sidebar.js"></script>
+    <script src="../js/validacion.js"></script>
+    <script src="../js/app.js"></script>
 
 </body>
 

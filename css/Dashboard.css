@@ -1,0 +1,1091 @@
+/* ============================================================
+   EDUTRACK — dashboard.css
+   Componente: Dashboard completo con sidebar colapsable
+   Depende de: style.css (tokens, reset, fuentes)
+   Breakpoint clave: 768px (sidebar visible/oculto)
+   ============================================================ */
+
+
+/* ── 1. VARIABLES ESPECÍFICAS DEL DASHBOARD ─────────────────
+   Solo tokens que no existen en style.css
+   ──────────────────────────────────────────────────────────── */
+:root {
+    --db-sidebar-w: 240px;
+    --db-topbar-h: 60px;
+    --db-sidebar-bg: #0B0F16;
+    /* ligeramente más oscuro que bg-base */
+    --db-sidebar-border: rgba(255, 255, 255, 0.06);
+    --db-sidebar-link-h: 40px;
+    --db-content-bg: var(--color-bg-base);
+    --db-overlay-bg: rgba(0, 0, 0, 0.65);
+
+    /* Sidebar link activo */
+    --db-link-active-bg: rgba(245, 166, 35, 0.10);
+    --db-link-active-color: var(--color-accent-primary);
+    --db-link-active-border: var(--color-accent-primary);
+
+    /* Logout */
+    --db-logout-color: #F87171;
+    --db-logout-bg: rgba(248, 113, 113, 0.08);
+    --db-logout-bg-h: rgba(248, 113, 113, 0.15);
+
+    /* KPI cards */
+    --kpi-blue-bg: rgba(59, 130, 246, 0.12);
+    --kpi-blue-border: rgba(59, 130, 246, 0.25);
+    --kpi-blue-icon: #60A5FA;
+    --kpi-yellow-bg: rgba(245, 166, 35, 0.12);
+    --kpi-yellow-border: rgba(245, 166, 35, 0.25);
+    --kpi-yellow-icon: var(--color-accent-primary);
+    --kpi-purple-bg: rgba(139, 92, 246, 0.12);
+    --kpi-purple-border: rgba(139, 92, 246, 0.25);
+    --kpi-purple-icon: #A78BFA;
+
+    /* Table */
+    --tbl-odd: var(--color-bg-surface);
+    --tbl-even: var(--color-bg-elevated);
+    --tbl-hover: rgba(245, 166, 35, 0.04);
+
+    /* Hamburger */
+    --ham-bar-w: 22px;
+    --ham-bar-h: 2px;
+    --ham-bar-gap: 5px;
+    --ham-color: var(--color-text-primary);
+    --ham-tr: 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+
+/* ── 2. LAYOUT RAÍZ ──────────────────────────────────────────
+   Flex row: sidebar fijo | contenido flexible
+   En mobile: sidebar se sale del flujo (position fixed)
+   ──────────────────────────────────────────────────────────── */
+.db-layout {
+    min-height: 100vh;
+    background: var(--db-content-bg);
+    position: relative;
+}
+
+
+/* ── 3. SIDEBAR ──────────────────────────────────────────────*/
+
+.db-sidebar {
+    /* Tamaño y posición */
+    width: var(--db-sidebar-w);
+    flex-shrink: 0;
+    min-height: 100vh;
+
+    /* Fondo y borde */
+    background-color: var(--db-sidebar-bg);
+    border-right: 1px solid var(--db-sidebar-border);
+
+    /* Layout interno */
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+
+    /* Transición de apertura/cierre */
+    transition: transform var(--ham-tr);
+
+    /* En mobile: fuera del flujo, desliza desde la izquierda */
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 300;
+    transform: translateX(-100%);
+    /* oculto por defecto en TODOS los tamaños */
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Sidebar abierto — clase añadida por JS */
+.db-sidebar.is-open {
+    transform: translateX(0);
+}
+
+/* En desktop (≥768px): siempre visible — sigue fixed pero con transform:none */
+@media (min-width: 768px) {
+    .db-sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        transform: translateX(0);
+        z-index: 300;
+    }
+}
+
+
+/* ── 3a. Logo ─────────────────────────────────────────────── */
+.db-sidebar__logo {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    padding: var(--sp-5) var(--sp-5) var(--sp-4);
+    border-bottom: 1px solid var(--db-sidebar-border);
+    flex-shrink: 0;
+}
+
+.db-sidebar__logo-img {
+    border-radius: var(--radius-sm);
+    flex-shrink: 0;
+}
+
+.db-sidebar__logo-name {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: var(--fs-md);
+    color: var(--color-text-primary);
+    letter-spacing: -0.01em;
+}
+
+
+/* ── 3b. Navegación ───────────────────────────────────────── */
+.db-sidebar__nav {
+    flex: 1;
+    padding: var(--sp-3) var(--sp-3) 0;
+}
+
+.db-sidebar__nav-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.db-sidebar__nav-item {
+    list-style: none;
+}
+
+.db-sidebar__nav-link {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    height: var(--db-sidebar-link-h);
+    padding: 0 var(--sp-3);
+    border-radius: var(--radius-md);
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    color: var(--color-text-muted);
+    transition: background-color 0.18s ease, color 0.18s ease;
+    position: relative;
+    border-left: 2px solid transparent;
+    text-decoration: none;
+}
+
+.db-sidebar__nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.04);
+    color: var(--color-text-primary);
+}
+
+/* Estado activo */
+.db-sidebar__nav-link--active {
+    background-color: var(--db-link-active-bg);
+    color: var(--db-link-active-color);
+    border-left-color: var(--db-link-active-border);
+    font-weight: 600;
+}
+
+.db-sidebar__nav-icon {
+    flex-shrink: 0;
+}
+
+/* Badge de conteo (ej: "4" cursos) */
+.db-sidebar__badge {
+    margin-left: auto;
+    background-color: rgba(245, 166, 35, 0.15);
+    color: var(--color-accent-primary);
+    font-size: 10px;
+    font-weight: 700;
+    font-family: var(--font-display);
+    padding: 2px 7px;
+    border-radius: var(--radius-full);
+}
+
+
+/* ── 3c. Separador ────────────────────────────────────────── */
+.db-sidebar__divider {
+    height: 1px;
+    background-color: var(--db-sidebar-border);
+    margin: var(--sp-3) var(--sp-3);
+    flex-shrink: 0;
+}
+
+
+/* ── 3d. Usuario ──────────────────────────────────────────── */
+.db-sidebar__user {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    padding: var(--sp-3) var(--sp-4);
+}
+
+.db-sidebar__user-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-full);
+    border: 2px solid rgba(245, 166, 35, 0.35);
+    background: var(--color-bg-elevated);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: var(--fs-sm);
+    color: var(--color-accent-primary);
+    flex-shrink: 0;
+    text-transform: uppercase;
+}
+
+.db-sidebar__user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.db-sidebar__user-name {
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    color: var(--color-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.db-sidebar__user-role {
+    font-size: var(--fs-xs);
+    color: var(--color-text-muted);
+}
+
+
+/* ── 3e. Botón logout ─────────────────────────────────────── */
+.db-sidebar__logout {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    margin: var(--sp-2) var(--sp-3) var(--sp-4);
+    padding: 0 var(--sp-3);
+    height: var(--db-sidebar-link-h);
+    border-radius: var(--radius-md);
+    border: none;
+    background-color: var(--db-logout-bg);
+    color: var(--db-logout-color);
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.18s ease;
+    width: calc(100% - var(--sp-6));
+    text-align: left;
+    flex-shrink: 0;
+}
+
+.db-sidebar__logout:hover {
+    background-color: var(--db-logout-bg-h);
+}
+
+
+/* ── 4. OVERLAY ───────────────────────────────────────────── */
+.db-overlay {
+    display: none;
+    /* oculto por defecto */
+    position: fixed;
+    inset: 0;
+    background-color: var(--db-overlay-bg);
+    z-index: 200;
+    /* debajo del sidebar (300) */
+    /* La transición de opacidad la maneja JS añadiendo/quitando is-visible */
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+/* Cuando JS activa el overlay */
+.db-overlay.is-visible {
+    display: block;
+    opacity: 1;
+    pointer-events: auto;
+}
+
+
+/* ── 5. ÁREA PRINCIPAL (topbar + contenido) ───────────────── */
+.db-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--db-content-bg);
+    /* En mobile no hay margen (sidebar está oculto/encima) */
+    margin-left: 0;
+    /* Transición suave al abrir/cerrar sidebar */
+    transition: margin-left 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* En desktop: el sidebar siempre visible ocupa 240px fijos */
+@media (min-width: 768px) {
+    .db-main {
+        margin-left: var(--db-sidebar-w);
+    }
+}
+
+
+/* ── 6. TOPBAR ────────────────────────────────────────────── */
+.db-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    height: var(--db-topbar-h);
+    display: flex;
+    align-items: center;
+    gap: var(--sp-4);
+    padding: 0 var(--sp-5);
+    background-color: rgba(11, 15, 22, 0.90);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--color-border);
+    flex-shrink: 0;
+}
+
+
+/* ── 6a. Hamburguesa ──────────────────────────────────────── */
+.db-hamburger {
+    /* Visible solo en mobile */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: var(--ham-bar-gap);
+    width: 36px;
+    height: 36px;
+    padding: 7px;
+    background: none;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: border-color 0.2s ease;
+}
+
+.db-hamburger:hover {
+    border-color: var(--color-border-input);
+}
+
+.db-hamburger:focus-visible {
+    outline: 2px solid var(--color-accent-primary);
+    outline-offset: 2px;
+}
+
+/* Las 3 barras */
+.db-hamburger__bar {
+    display: block;
+    width: var(--ham-bar-w);
+    height: var(--ham-bar-h);
+    background-color: var(--ham-color);
+    border-radius: var(--radius-full);
+    /* Transición que afecta transform y opacity para la animación X */
+    transition:
+        transform var(--ham-tr),
+        opacity var(--ham-tr),
+        top var(--ham-tr);
+    transform-origin: center;
+}
+
+/*
+  Cuando el sidebar está abierto, el botón tiene aria-expanded="true"
+  y JS añade la clase .is-active al botón.
+  Transformamos las 3 barras en una X:
+  - barra 1: rota +45°
+  - barra 2: se hace invisible (opacity 0)
+  - barra 3: rota -45°
+*/
+.db-hamburger.is-active .db-hamburger__bar:nth-child(1) {
+    transform: translateY(calc(var(--ham-bar-gap) + var(--ham-bar-h))) rotate(45deg);
+}
+
+.db-hamburger.is-active .db-hamburger__bar:nth-child(2) {
+    opacity: 0;
+    transform: scaleX(0);
+}
+
+.db-hamburger.is-active .db-hamburger__bar:nth-child(3) {
+    transform: translateY(calc(-1 * (var(--ham-bar-gap) + var(--ham-bar-h)))) rotate(-45deg);
+}
+
+/* En desktop: ocultar el botón hamburguesa */
+@media (min-width: 768px) {
+    .db-hamburger {
+        display: none;
+    }
+}
+
+
+/* ── 6b. Saludo y acciones ────────────────────────────────── */
+.db-topbar__greeting {
+    flex: 1;
+    min-width: 0;
+}
+
+.db-topbar__title {
+    font-family: var(--font-display);
+    font-size: var(--fs-md);
+    font-weight: 700;
+    color: var(--color-text-primary);
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.db-topbar__name {
+    color: var(--color-accent-primary);
+}
+
+.db-topbar__date {
+    font-size: var(--fs-xs);
+    color: var(--color-text-muted);
+    margin-top: 1px;
+    display: none;
+    /* oculta en mobile para ahorrar espacio */
+}
+
+@media (min-width: 480px) {
+    .db-topbar__date {
+        display: block;
+    }
+}
+
+.db-topbar__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    flex-shrink: 0;
+}
+
+.db-topbar__icon-btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-sm);
+    background: none;
+    border: 1px solid var(--color-border);
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.db-topbar__icon-btn:hover {
+    color: var(--color-text-primary);
+    border-color: var(--color-border-input);
+}
+
+.db-topbar__notif-dot {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 7px;
+    height: 7px;
+    border-radius: var(--radius-full);
+    background-color: var(--color-accent-primary);
+    border: 1.5px solid var(--db-sidebar-bg);
+}
+
+
+/* ── 7. CONTENIDO PRINCIPAL ───────────────────────────────── */
+.db-content {
+    flex: 1;
+    padding: var(--sp-6) var(--sp-5) var(--sp-12);
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-8);
+}
+
+@media (min-width: 768px) {
+    .db-content {
+        padding: var(--sp-8) var(--sp-8) var(--sp-12);
+    }
+}
+
+/* Label de sección */
+.db-section-label {
+    font-family: var(--font-body);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--color-text-muted);
+}
+
+
+/* ── 8. KPI CARDS ─────────────────────────────────────────── */
+.db-kpi-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-4);
+}
+
+.db-kpi-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    /* mobile: 1 col */
+    gap: var(--sp-4);
+    align-items: stretch;
+}
+
+@media (min-width: 540px) {
+    .db-kpi-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* Card base */
+.db-kpi-card {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    gap: var(--sp-4);
+    padding: var(--sp-5);
+    background-color: var(--color-bg-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+/* Línea superior de acento */
+.db-kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+
+.db-kpi-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+}
+
+.db-kpi-card:hover::before {
+    opacity: 1;
+}
+
+.db-kpi-card--blue::before {
+    background: linear-gradient(90deg, #3B82F6, #60A5FA);
+}
+
+.db-kpi-card--yellow::before {
+    background: linear-gradient(90deg, var(--color-accent-primary), #FFD370);
+}
+
+.db-kpi-card--purple::before {
+    background: linear-gradient(90deg, #8B5CF6, #A78BFA);
+}
+
+.db-kpi-card--blue:hover {
+    border-color: rgba(59, 130, 246, 0.30);
+}
+
+.db-kpi-card--yellow:hover {
+    border-color: var(--color-border-emphasis);
+}
+
+.db-kpi-card--purple:hover {
+    border-color: rgba(139, 92, 246, 0.30);
+}
+
+/* Header de la KPI card */
+.db-kpi-card__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Ícono */
+.db-kpi-card__icon-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border-radius: var(--radius-md);
+    flex-shrink: 0;
+    transition: transform 0.25s ease;
+}
+
+.db-kpi-card:hover .db-kpi-card__icon-wrap {
+    transform: scale(1.07);
+}
+
+.db-kpi-card__icon-wrap--blue {
+    background: var(--kpi-blue-bg);
+    border: 1px solid var(--kpi-blue-border);
+    color: var(--kpi-blue-icon);
+}
+
+.db-kpi-card__icon-wrap--yellow {
+    background: var(--kpi-yellow-bg);
+    border: 1px solid var(--kpi-yellow-border);
+    color: var(--kpi-yellow-icon);
+}
+
+.db-kpi-card__icon-wrap--purple {
+    background: var(--kpi-purple-bg);
+    border: 1px solid var(--kpi-purple-border);
+    color: var(--kpi-purple-icon);
+}
+
+/* Badges */
+.db-kpi-card__badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: var(--radius-full);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.db-kpi-card__badge--blue {
+    background: rgba(59, 130, 246, 0.12);
+    color: #60A5FA;
+    border: 1px solid rgba(59, 130, 246, 0.25);
+}
+
+.db-kpi-card__badge--yellow {
+    background: rgba(245, 166, 35, 0.12);
+    color: var(--color-accent-primary);
+    border: 1px solid rgba(245, 166, 35, 0.25);
+}
+
+.db-kpi-card__badge--orange {
+    background: rgba(249, 115, 22, 0.12);
+    color: var(--color-accent-orange);
+    border: 1px solid rgba(249, 115, 22, 0.25);
+}
+
+/* Body */
+.db-kpi-card__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2);
+}
+
+.db-kpi-card__label {
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    color: var(--color-text-muted);
+}
+
+.db-kpi-card__value {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    line-height: 1.1;
+    color: var(--color-text-primary);
+}
+
+.db-kpi-card__value--price {
+    font-size: clamp(1.5rem, 3.5vw, 2rem);
+}
+
+.db-kpi-card__unit {
+    display: inline;
+    font-family: var(--font-body);
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    color: var(--color-text-muted);
+    margin-left: 3px;
+}
+
+.db-kpi-card__sub {
+    font-size: var(--fs-xs);
+    color: var(--color-text-muted);
+    line-height: 1.5;
+}
+
+.db-kpi-card__sub strong {
+    color: var(--color-text-primary);
+    font-weight: 600;
+}
+
+/* Progress bar dentro de KPI */
+.db-kpi-progress {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2);
+    margin-top: var(--sp-2);
+}
+
+.db-kpi-progress__track {
+    width: 100%;
+    height: 7px;
+    background: var(--color-bg-elevated);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    position: relative;
+}
+
+.db-kpi-progress__fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: var(--progress-value, var(--kpi-pct, 0%));
+    background: linear-gradient(90deg, var(--color-accent-primary), #FFD370);
+    border-radius: var(--radius-full);
+    animation: kpi-fill 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) both 0.2s;
+}
+
+@keyframes kpi-fill {
+    from {
+        width: 0%
+    }
+
+    to {
+        width: var(--progress-value, var(--kpi-pct, 0%))
+    }
+}
+
+.db-kpi-progress__labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: var(--fs-xs);
+    color: var(--color-text-subtle);
+}
+
+/* Footer de KPI */
+.db-kpi-card__footer {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    padding-top: var(--sp-4);
+    border-top: 1px solid var(--color-border);
+    flex-wrap: wrap;
+}
+
+.db-kpi-card__delta {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 3px 9px;
+    border-radius: var(--radius-full);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+}
+
+.db-kpi-card__delta--up {
+    background: rgba(34, 197, 94, 0.10);
+    color: var(--color-accent-success);
+}
+
+.db-kpi-card__delta--neutral {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--color-text-subtle);
+}
+
+.db-kpi-card__delta-label {
+    font-size: var(--fs-xs);
+    color: var(--color-text-subtle);
+}
+
+
+/* ── 9. TABLA DE CURSOS ───────────────────────────────────── */
+.db-table-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-4);
+}
+
+.db-table-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--sp-2);
+}
+
+.db-table-count {
+    font-size: var(--fs-xs);
+    color: var(--color-text-subtle);
+}
+
+/* Wrapper con scroll horizontal en mobile */
+.db-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+    -webkit-overflow-scrolling: touch;
+}
+
+.db-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 480px;
+    table-layout: auto;
+}
+
+/* Cabecera */
+.db-table__head {
+    background-color: var(--color-bg-elevated);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.db-table__th {
+    padding: var(--sp-3) var(--sp-4);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-text-muted);
+    text-align: left;
+    white-space: nowrap;
+}
+
+/* Primera y última columna con padding extra */
+.db-table__th:first-child,
+.db-table__td:first-child {
+    padding-left: var(--sp-5);
+}
+
+.db-table__th:last-child,
+.db-table__td:last-child {
+    padding-right: var(--sp-5);
+}
+
+/* Filas */
+.db-table__row:nth-child(odd) {
+    background-color: var(--tbl-odd);
+}
+
+.db-table__row:nth-child(even) {
+    background-color: var(--tbl-even);
+}
+
+.db-table__row {
+    border-bottom: 1px solid var(--color-border);
+    transition: background-color 0.15s ease;
+}
+
+.db-table__row:last-child {
+    border-bottom: none;
+}
+
+.db-table__row:hover {
+    background-color: var(--tbl-hover) !important;
+}
+
+.db-table__td {
+    padding: var(--sp-3) var(--sp-4);
+    font-size: var(--fs-sm);
+    color: var(--color-text-primary);
+    vertical-align: middle;
+}
+
+/* Columna curso */
+.db-table__course-name {
+    display: block;
+    font-weight: 600;
+    font-size: var(--fs-sm);
+    white-space: nowrap;
+}
+
+.db-table__course-tech {
+    display: block;
+    font-size: var(--fs-xs);
+    color: var(--color-text-subtle);
+    margin-top: 2px;
+}
+
+/* Columna instructor */
+.db-table__instructor {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    font-size: var(--fs-sm);
+    color: var(--color-text-muted);
+    white-space: nowrap;
+}
+
+.db-table__avatar {
+    border-radius: var(--radius-full);
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+/* Columna progreso */
+.db-table__prog-wrap {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    min-width: 90px;
+}
+
+.db-table__prog-bar {
+    flex: 1;
+    height: 5px;
+    background: var(--color-bg-base);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    position: relative;
+}
+
+.db-table__prog-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: var(--tp, 0%);
+    border-radius: var(--radius-full);
+    animation: tp-fill 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+@keyframes tp-fill {
+    from {
+        width: 0%
+    }
+
+    to {
+        width: var(--tp, 0%)
+    }
+}
+
+.db-table__prog-fill--blue {
+    background: linear-gradient(90deg, #3B82F6, #60A5FA);
+}
+
+.db-table__prog-fill--green {
+    background: linear-gradient(90deg, var(--color-accent-success), #4ADE80);
+}
+
+.db-table__prog-fill--yellow {
+    background: linear-gradient(90deg, var(--color-accent-primary), #FFD370);
+}
+
+.db-table__prog-pct {
+    font-family: var(--font-display);
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    color: var(--color-text-muted);
+    min-width: 30px;
+    text-align: right;
+}
+
+/* Columna fecha */
+.db-table__td--date {
+    white-space: nowrap;
+    font-size: var(--fs-xs);
+    color: var(--color-text-muted);
+}
+
+/* Columna precio */
+.db-table__price {
+    display: block;
+    font-family: var(--font-display);
+    font-size: var(--fs-sm);
+    font-weight: 700;
+}
+
+.db-table__price-total {
+    display: block;
+    font-size: var(--fs-xs);
+    color: var(--color-text-subtle);
+}
+
+/* Badges de estado */
+.db-table__badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: var(--radius-full);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.db-table__badge--active {
+    background: rgba(59, 130, 246, 0.14);
+    color: #60A5FA;
+    border: 1px solid rgba(59, 130, 246, 0.30);
+}
+
+.db-table__badge--completed {
+    background: rgba(34, 197, 94, 0.14);
+    color: var(--color-accent-success);
+    border: 1px solid rgba(34, 197, 94, 0.30);
+}
+
+.db-table__badge--paused {
+    background: rgba(245, 166, 35, 0.14);
+    color: var(--color-accent-primary);
+    border: 1px solid rgba(245, 166, 35, 0.30);
+}
+
+/* Ocultar columnas en mobile */
+.db-table__th--hide,
+.db-table__td--hide {
+    display: none;
+}
+
+@media (min-width: 640px) {
+
+    .db-table__th--hide,
+    .db-table__td--hide {
+        display: table-cell;
+    }
+
+    .db-table {
+        min-width: unset;
+    }
+}
+
+
+/* ============================================================
+   VISTAS (view router) — añadido para SPA unificado
+   Controla qué vista está activa.
+   app.js alterna las clases .view--active y .view--hidden.
+   ============================================================ */
+
+/* Todas las vistas: ocultas por defecto, sin ocupar espacio */
+.view {
+    display: none;
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    /* Cada vista ocupa toda la ventana */
+    min-height: 100vh;
+}
+
+/* Vista activa: visible */
+.view--active {
+    display: block;
+    opacity: 1;
+}
+
+/* Clase intermedia durante la transición de salida */
+.view--leaving {
+    display: block;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* El dashboard ocupa toda la altura disponible */
+#view-dashboard.view--active {
+    display: flex;
+    /* necesario para que .db-layout tome el 100% */
+    flex-direction: column;
+}
+
+/* Botón logo del sidebar (reemplaza el <a> por <button> en la vista unificada) */
+.db-sidebar__logo-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    width: 100%;
+}
