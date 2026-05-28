@@ -59,9 +59,9 @@
    En mobile: sidebar se sale del flujo (position fixed)
    ──────────────────────────────────────────────────────────── */
 .db-layout {
+    display: flex;
     min-height: 100vh;
     background: var(--db-content-bg);
-    position: relative;
 }
 
 
@@ -102,15 +102,15 @@
     transform: translateX(0);
 }
 
-/* En desktop (≥768px): siempre visible — sigue fixed pero con transform:none */
+/* En desktop (≥768px): siempre visible, posición estática */
 @media (min-width: 768px) {
     .db-sidebar {
-        position: fixed;
+        position: sticky;
         top: 0;
-        left: 0;
-        height: 100vh;
         transform: translateX(0);
-        z-index: 300;
+        /* siempre visible */
+        height: 100vh;
+        z-index: auto;
     }
 }
 
@@ -219,20 +219,10 @@
 }
 
 .db-sidebar__user-avatar {
-    width: 36px;
-    height: 36px;
     border-radius: var(--radius-full);
     border: 2px solid rgba(245, 166, 35, 0.35);
-    background: var(--color-bg-elevated);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: var(--font-display);
-    font-weight: 800;
-    font-size: var(--fs-sm);
-    color: var(--color-accent-primary);
+    object-fit: cover;
     flex-shrink: 0;
-    text-transform: uppercase;
 }
 
 .db-sidebar__user-info {
@@ -301,7 +291,6 @@
 .db-overlay.is-visible {
     display: block;
     opacity: 1;
-    pointer-events: auto;
 }
 
 
@@ -309,20 +298,10 @@
 .db-main {
     flex: 1;
     min-width: 0;
+    /* evita overflow con flex */
     display: flex;
     flex-direction: column;
     background: var(--db-content-bg);
-    /* En mobile no hay margen (sidebar está oculto/encima) */
-    margin-left: 0;
-    /* Transición suave al abrir/cerrar sidebar */
-    transition: margin-left 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-
-/* En desktop: el sidebar siempre visible ocupa 240px fijos */
-@media (min-width: 768px) {
-    .db-main {
-        margin-left: var(--db-sidebar-w);
-    }
 }
 
 
@@ -335,7 +314,7 @@
     display: flex;
     align-items: center;
     gap: var(--sp-4);
-    padding: 0 var(--sp-5);
+    padding: 0 var(--sp-5) 0 var(--sp-4);
     background-color: rgba(11, 15, 22, 0.90);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
@@ -492,7 +471,7 @@
 /* ── 7. CONTENIDO PRINCIPAL ───────────────────────────────── */
 .db-content {
     flex: 1;
-    padding: var(--sp-6) var(--sp-5) var(--sp-12);
+    padding: var(--sp-6) var(--sp-5) var(--sp-12) var(--sp-4);
     display: flex;
     flex-direction: column;
     gap: var(--sp-8);
@@ -500,7 +479,7 @@
 
 @media (min-width: 768px) {
     .db-content {
-        padding: var(--sp-8) var(--sp-8) var(--sp-12);
+        padding: var(--sp-6) var(--sp-6) var(--sp-12) var(--sp-4);
     }
 }
 
@@ -733,7 +712,7 @@
     top: 0;
     left: 0;
     height: 100%;
-    width: var(--progress-value, var(--kpi-pct, 0%));
+    width: var(--kpi-pct, 0%);
     background: linear-gradient(90deg, var(--color-accent-primary), #FFD370);
     border-radius: var(--radius-full);
     animation: kpi-fill 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) both 0.2s;
@@ -745,7 +724,7 @@
     }
 
     to {
-        width: var(--progress-value, var(--kpi-pct, 0%))
+        width: var(--kpi-pct, 0%)
     }
 }
 
@@ -1088,4 +1067,687 @@
     cursor: pointer;
     padding: 0;
     width: 100%;
+}
+
+
+/* ============================================================
+   SECCIÓN CURSOS
+   ============================================================ */
+
+/* Tabs de categoría */
+.cat-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-2);
+    margin-bottom: var(--sp-5);
+}
+
+.cat-tab {
+    padding: var(--sp-2) var(--sp-4);
+    border-radius: var(--radius-full);
+    font-family: var(--font-body);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    background: var(--color-bg-elevated);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.cat-tab:hover {
+    border-color: var(--color-border-input);
+    color: var(--color-text-primary);
+}
+
+.cat-tab--active {
+    background: rgba(245, 166, 35, 0.12);
+    border-color: rgba(245, 166, 35, 0.40);
+    color: var(--color-accent-primary);
+}
+
+.cursos-count {
+    font-size: var(--fs-sm);
+    color: var(--color-text-muted);
+    margin-bottom: var(--sp-5);
+}
+
+/* Grid de cursos: mobile 1col, tablet 2col, desktop 3col */
+.cursos-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--sp-5);
+}
+
+@media (min-width: 600px) {
+    .cursos-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1024px) {
+    .cursos-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* Tarjeta de curso */
+.curso-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-3);
+    padding: var(--sp-5);
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    transition: border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.curso-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--cat-color, var(--color-accent-primary));
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+
+.curso-card:hover {
+    border-color: rgba(245, 166, 35, 0.30);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+}
+
+.curso-card:hover::before {
+    opacity: 1;
+}
+
+.curso-card__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-2);
+    flex-wrap: wrap;
+}
+
+.curso-cat-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: var(--radius-full);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    border: 1px solid transparent;
+}
+
+.curso-nivel {
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+}
+
+.nivel--basico {
+    background: rgba(34, 197, 94, 0.10);
+    color: var(--color-accent-success);
+}
+
+.nivel--intermedio {
+    background: rgba(59, 130, 246, 0.10);
+    color: #60A5FA;
+}
+
+.nivel--avanzado {
+    background: rgba(139, 92, 246, 0.10);
+    color: #A78BFA;
+}
+
+.curso-card__title {
+    font-family: var(--font-display);
+    font-size: var(--fs-md);
+    font-weight: 700;
+    color: var(--color-text-primary);
+    line-height: 1.3;
+}
+
+.curso-card__desc {
+    font-size: var(--fs-sm);
+    color: var(--color-text-muted);
+    line-height: 1.65;
+    flex: 1;
+}
+
+.curso-card__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-3);
+    font-size: var(--fs-xs);
+    color: var(--color-text-muted);
+    padding-top: var(--sp-3);
+    border-top: 1px solid var(--color-border);
+}
+
+.curso-card__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-2);
+}
+
+.curso-card__precio {
+    font-family: var(--font-display);
+    font-size: var(--fs-sm);
+    font-weight: 700;
+    color: var(--color-accent-primary);
+}
+
+
+/* ============================================================
+   SECCIÓN REPORTES
+   ============================================================ */
+
+/* KPI boxes del reporte */
+.rep-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--sp-4);
+    margin-bottom: var(--sp-8);
+}
+
+@media (min-width: 768px) {
+    .rep-kpi-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+.rep-kpi-box {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-4);
+    padding: var(--sp-5);
+    border-radius: var(--radius-lg);
+    border: 1px solid transparent;
+    transition: transform 0.2s ease;
+}
+
+.rep-kpi-box:hover {
+    transform: translateY(-2px);
+}
+
+.rep-kpi-icon {
+    font-size: 1.75rem;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.rep-kpi-label {
+    font-size: var(--fs-xs);
+    color: var(--color-text-muted);
+    font-weight: 500;
+    margin-bottom: var(--sp-1);
+}
+
+.rep-kpi-value {
+    font-family: var(--font-display);
+    font-size: var(--fs-xl);
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: var(--sp-1);
+}
+
+.rep-kpi-sub {
+    font-size: var(--fs-xs);
+    color: var(--color-text-subtle);
+}
+
+/* Row de gráficos */
+.rep-charts-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--sp-6);
+    margin-bottom: var(--sp-8);
+}
+
+@media (min-width: 768px) {
+    .rep-charts-row {
+        grid-template-columns: 1fr 1.5fr;
+    }
+}
+
+.rep-chart-box {
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--sp-5);
+}
+
+.rep-chart-title {
+    font-family: var(--font-display);
+    font-size: var(--fs-md);
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: var(--sp-4);
+}
+
+.rep-canvas-wrap {
+    height: 220px;
+    position: relative;
+}
+
+/* Tabla top 10 */
+.rep-table-section {
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--sp-5);
+}
+
+
+/* ============================================================
+   SECCIÓN CONFIGURACIÓN
+   ============================================================ */
+
+.config-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--sp-6);
+}
+
+@media (min-width: 768px) {
+    .config-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.config-card {
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--sp-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-5);
+}
+
+.config-card__title {
+    font-family: var(--font-display);
+    font-size: var(--fs-md);
+    font-weight: 700;
+    color: var(--color-text-primary);
+    padding-bottom: var(--sp-4);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.config-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-4);
+}
+
+.config-label {
+    display: block;
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-muted);
+    margin-bottom: var(--sp-2);
+}
+
+.config-input {
+    width: 100%;
+    padding: var(--sp-3) var(--sp-4);
+    background: var(--color-bg-input);
+    border: 1px solid var(--color-border-input);
+    border-radius: var(--radius-md);
+    color: var(--color-text-primary);
+    font-family: var(--font-body);
+    font-size: var(--fs-sm);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.config-input:focus {
+    outline: none;
+    border-color: var(--color-accent-primary);
+    box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.15);
+}
+
+/* Toggle switches */
+.config-toggles {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-4);
+}
+
+.toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-3);
+    padding: var(--sp-3) 0;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.toggle-row:last-child {
+    border-bottom: none;
+}
+
+.toggle-label {
+    font-size: var(--fs-sm);
+    color: var(--color-text-primary);
+    cursor: pointer;
+    flex: 1;
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+
+.toggle-track {
+    width: 44px;
+    height: 24px;
+    background: var(--color-bg-elevated);
+    border: 1px solid var(--color-border-input);
+    border-radius: var(--radius-full);
+    transition: background 0.2s ease, border-color 0.2s ease;
+    position: relative;
+}
+
+.toggle-thumb {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 16px;
+    height: 16px;
+    background: var(--color-text-muted);
+    border-radius: var(--radius-full);
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.toggle-switch input:checked+.toggle-track {
+    background: rgba(245, 166, 35, 0.20);
+    border-color: var(--color-accent-primary);
+}
+
+.toggle-switch input:checked+.toggle-track .toggle-thumb {
+    transform: translateX(20px);
+    background: var(--color-accent-primary);
+}
+
+.toggle-switch input:focus-visible+.toggle-track {
+    outline: 2px solid var(--color-accent-primary);
+    outline-offset: 2px;
+}
+
+/* Acciones del sistema */
+.config-actions-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-4);
+}
+
+.config-action-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-4);
+    padding: var(--sp-4);
+    background: var(--color-bg-elevated);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    flex-wrap: wrap;
+}
+
+.config-action-row--danger {
+    border-color: rgba(239, 68, 68, 0.20);
+    background: rgba(239, 68, 68, 0.04);
+}
+
+.config-action-title {
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin-bottom: 2px;
+}
+
+.config-action-sub {
+    font-size: var(--fs-xs);
+    color: var(--color-text-muted);
+}
+
+.config-version {
+    font-size: var(--fs-xs);
+    color: var(--color-text-subtle);
+    text-align: center;
+    padding-top: var(--sp-4);
+    border-top: 1px solid var(--color-border);
+}
+
+
+/* ============================================================
+   PANEL DE NOTIFICACIONES
+   ============================================================ */
+
+/* Contenedor relativo para posicionar el panel bajo el botón */
+.notif-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+/* Badge rojo con contador de alertas */
+.notif-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    background: var(--color-danger);
+    color: #fff;
+    border-radius: var(--radius-full);
+    font-family: var(--font-display);
+    font-size: 10px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--db-sidebar-bg);
+    pointer-events: none;
+    z-index: 2;
+}
+
+/* Panel flotante — se abre hacia abajo desde el botón izquierdo */
+.notif-panel {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    /* alineado al borde derecho del wrapper */
+    width: 340px;
+    max-height: 480px;
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-border-input);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.55);
+    z-index: 600;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+
+    /* Animación de entrada */
+    opacity: 0;
+    transform: translateY(-8px) scale(0.97);
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.notif-panel.is-open {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+}
+
+/* Cabecera del panel */
+.notif-panel__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--sp-4) var(--sp-5);
+    border-bottom: 1px solid var(--color-border);
+    flex-shrink: 0;
+}
+
+.notif-panel__title {
+    font-family: var(--font-display);
+    font-size: var(--fs-sm);
+    font-weight: 700;
+    color: var(--color-text-primary);
+}
+
+.notif-panel__close {
+    background: none;
+    border: none;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    font-size: var(--fs-sm);
+    padding: var(--sp-1);
+    border-radius: var(--radius-sm);
+    line-height: 1;
+    transition: color 0.15s ease;
+}
+
+.notif-panel__close:hover {
+    color: var(--color-text-primary);
+}
+
+/* Lista de notificaciones */
+.notif-panel__list {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2);
+    padding: var(--sp-3);
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border) transparent;
+}
+
+.notif-panel__list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.notif-panel__list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.notif-panel__list::-webkit-scrollbar-thumb {
+    background: var(--color-border-input);
+    border-radius: 99px;
+}
+
+/* Item individual */
+.notif-item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--sp-3);
+    padding: var(--sp-3) var(--sp-4);
+    border-radius: var(--radius-md);
+    border: 1px solid transparent;
+    transition: background 0.15s ease;
+}
+
+.notif-item:hover {
+    filter: brightness(1.08);
+}
+
+.notif-item__left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--sp-1);
+    flex-shrink: 0;
+}
+
+.notif-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: var(--radius-full);
+    flex-shrink: 0;
+}
+
+.notif-icono {
+    font-size: 1.1rem;
+    line-height: 1;
+}
+
+.notif-item__body {
+    flex: 1;
+    min-width: 0;
+}
+
+.notif-titulo {
+    font-family: var(--font-display);
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: 2px;
+}
+
+.notif-texto {
+    font-size: var(--fs-xs);
+    color: var(--color-text-muted);
+    line-height: 1.5;
+}
+
+.notif-tiempo {
+    font-size: 10px;
+    color: var(--color-text-subtle);
+    font-weight: 500;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+/* Estado vacío */
+.notif-empty {
+    text-align: center;
+    font-size: var(--fs-sm);
+    color: var(--color-text-muted);
+    padding: var(--sp-8) var(--sp-4);
+}
+
+/* Pie del panel */
+.notif-panel__footer {
+    padding: var(--sp-3) var(--sp-5);
+    border-top: 1px solid var(--color-border);
+    font-size: 10px;
+    color: var(--color-text-subtle);
+    text-align: center;
+    flex-shrink: 0;
+}
+
+/* En mobile: panel se extiende hacia la derecha */
+@media (max-width: 480px) {
+    .notif-panel {
+        width: calc(100vw - 2rem);
+        max-height: 70vh;
+    }
 }

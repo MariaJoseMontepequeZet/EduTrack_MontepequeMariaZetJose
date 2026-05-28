@@ -481,7 +481,10 @@ body {
 }
 
 .card-actions .btn {
-    flex: 1;
+    flex: 0 0 auto;
+    /* tamaño natural, sin estirarse */
+    min-width: 90px;
+    /* ancho mínimo legible */
     justify-content: center;
 }
 

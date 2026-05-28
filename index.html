@@ -185,12 +185,7 @@
             overflow-x: hidden;
         }
 
-        /* Asegurar que el contenido no quede bajo el sidebar en desktop */
-        @media (min-width: 768px) {
-            .db-main {
-                margin-left: 240px;
-            }
-        }
+        /* sidebar sticky — sin margin-left necesario */
     </style>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
@@ -451,10 +446,28 @@
                     </div>
 
                     <div class="db-topbar__actions">
-                        <button id="btnNotificaciones" class="db-topbar__icon-btn" aria-label="Notificaciones">
-                            🔔
-                            <span class="db-topbar__notif-dot" aria-hidden="true"></span>
-                        </button>
+                        <div class="notif-wrapper">
+                            <button id="btnNotificaciones" class="db-topbar__icon-btn" aria-label="Abrir notificaciones"
+                                aria-haspopup="true" aria-expanded="false">
+                                🔔
+                            </button>
+                            <span id="notifBadge" class="notif-badge" aria-hidden="true" style="display:none"></span>
+
+                            <div id="notifPanel" class="notif-panel" role="dialog" aria-label="Notificaciones"
+                                aria-modal="false">
+                                <div class="notif-panel__header">
+                                    <h2 class="notif-panel__title">🔔 Notificaciones</h2>
+                                    <button class="notif-panel__close" onclick="EduTrack.cerrarPanelNotificaciones()"
+                                        aria-label="Cerrar notificaciones">✕</button>
+                                </div>
+                                <div id="notifPanelContent" class="notif-panel__list" aria-live="polite">
+                                    <p class="notif-empty">Cargando…</p>
+                                </div>
+                                <div class="notif-panel__footer">
+                                    <span>Actualizado en tiempo real</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </header>
                 <div class="db-content">

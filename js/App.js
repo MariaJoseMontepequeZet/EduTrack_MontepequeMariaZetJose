@@ -1,14 +1,13 @@
 /**
- * EduTrack — app.js v2.2
- * Correcciones aplicadas:
- * - Landing Page por defecto.
- * - Login con datos demo integrados.
- * - Grid de estudiantes limitado a 12 cards por pantalla con paginación funcional.
+ * EduTrack — app.js v2.3
+ * Cambios v2.3:
+ * - Logout ahora va a 'landing' en vez de 'login'
+ * - initNavSidebar incorpora cursos, reportes y configuracion
+ * - renderizarCursos(), renderizarReportes(), renderizarConfiguracion()
  */
 (function () {
     'use strict';
 
-    /* ── Dataset inicial — 35 estudiantes colombianos ── */
     var DATASET_INICIAL = [
         { id: 1, nombre: 'Juan', apellido: 'Pérez', email: 'pjuan5058@gmail.com', ciudad: 'Bogotá', curso: 'Desarrollo Web', progreso: 75, fechaInscripcion: '2023-01-15', plan: 'Premium', montoUSD: 99.99, activo: true },
         { id: 2, nombre: 'María', apellido: 'Gómez', email: 'maria.gomez91@gmail.com', ciudad: 'Medellín', curso: 'Diseño UX/UI', progreso: 60, fechaInscripcion: '2023-02-20', plan: 'Básico', montoUSD: 29.99, activo: true },
@@ -47,6 +46,40 @@
         { id: 35, nombre: 'Hernán', apellido: 'Zapata', email: 'hernanzapata.col@gmail.com', ciudad: 'Cali', curso: 'React Native', progreso: 75, fechaInscripcion: '2024-05-30', plan: 'Estándar', montoUSD: 59.99, activo: true }
     ];
 
+    /* ── Catálogo completo de 30 cursos ── */
+    var CATALOGO_CURSOS = [
+        { id: 1, nombre: 'Desarrollo Web', categoria: 'web', nivel: 'Básico', semanas: 12, precio: 'Básico', inscritos: 6, instructor: 'Carlos López', descripcion: 'HTML, CSS y JavaScript desde cero. Crea tu primer sitio web responsivo.' },
+        { id: 2, nombre: 'Full Stack Web', categoria: 'web', nivel: 'Avanzado', semanas: 16, precio: 'Premium', inscritos: 4, instructor: 'Valentina Torres', descripcion: 'React + Node.js + PostgreSQL. Arquitectura cliente-servidor completa.' },
+        { id: 3, nombre: 'Diseño UX/UI', categoria: 'design', nivel: 'Intermedio', semanas: 10, precio: 'Básico', inscritos: 5, instructor: 'Sofía Jiménez', descripcion: 'Figma, prototipos y principios de experiencia de usuario.' },
+        { id: 4, nombre: 'Python y Data Science', categoria: 'data', nivel: 'Intermedio', semanas: 14, precio: 'Estándar', inscritos: 5, instructor: 'Felipe González', descripcion: 'Pandas, NumPy, visualización y machine learning con scikit-learn.' },
+        { id: 5, nombre: 'DevOps y Cloud', categoria: 'devops', nivel: 'Avanzado', semanas: 14, precio: 'Premium', inscritos: 4, instructor: 'Daniela Vargas', descripcion: 'Docker, Kubernetes, CI/CD y despliegue en AWS.' },
+        { id: 6, nombre: 'React Native', categoria: 'mobile', nivel: 'Intermedio', semanas: 10, precio: 'Estándar', inscritos: 4, instructor: 'Diego Mendoza', descripcion: 'Aplicaciones móviles iOS y Android con un solo codebase.' },
+        { id: 7, nombre: 'SQL y Bases de Datos', categoria: 'data', nivel: 'Básico', semanas: 8, precio: 'Básico', inscritos: 3, instructor: 'Miguel Castro', descripcion: 'PostgreSQL, consultas avanzadas, índices y optimización.' },
+        { id: 8, nombre: 'Marketing Digital', categoria: 'marketing', nivel: 'Básico', semanas: 8, precio: 'Básico', inscritos: 4, instructor: 'Camila Ruiz', descripcion: 'SEO, SEM, redes sociales y analítica web con Google Analytics.' },
+        { id: 9, nombre: 'TypeScript Avanzado', categoria: 'web', nivel: 'Avanzado', semanas: 8, precio: 'Estándar', inscritos: 18, instructor: 'Alejandro Ortega', 'descripcion': 'Tipos, generics, decoradores y patrones de diseño en TS.' },
+        { id: 10, nombre: 'Vue.js desde Cero', categoria: 'web', nivel: 'Intermedio', semanas: 10, precio: 'Estándar', inscritos: 22, instructor: 'Laura Moreno', descripcion: 'Composition API, Vuex/Pinia y despliegue de SPAs.' },
+        { id: 11, nombre: 'Machine Learning con Python', categoria: 'data', nivel: 'Avanzado', semanas: 16, precio: 'Premium', inscritos: 15, instructor: 'Adriana Molina', descripcion: 'Regresión, clasificación, redes neuronales y MLOps.' },
+        { id: 12, nombre: 'AWS Solutions Architect', categoria: 'devops', nivel: 'Avanzado', semanas: 12, precio: 'Premium', inscritos: 11, instructor: 'Claudia Patiño', descripcion: 'Certificación SAA-C03: EC2, S3, Lambda y arquitecturas serverless.' },
+        { id: 13, nombre: 'Flutter & Dart', categoria: 'mobile', nivel: 'Intermedio', semanas: 12, precio: 'Estándar', inscritos: 19, instructor: 'Iván Bermúdez', descripcion: 'Apps multiplataforma con Material 3 y Riverpod.' },
+        { id: 14, nombre: 'Ciberseguridad Básica', categoria: 'seguridad', nivel: 'Básico', semanas: 8, precio: 'Básico', inscritos: 27, instructor: 'Hernán Zapata', descripcion: 'OWASP Top 10, pentesting ético y protección de APIs.' },
+        { id: 15, nombre: 'Node.js & APIs REST', categoria: 'web', nivel: 'Intermedio', semanas: 10, precio: 'Estándar', inscritos: 31, instructor: 'Gustavo Londoño', descripcion: 'Express, autenticación JWT, documentación con Swagger.' },
+        { id: 16, nombre: 'Docker & Kubernetes', categoria: 'devops', nivel: 'Intermedio', semanas: 10, precio: 'Estándar', inscritos: 14, instructor: 'Mateo Salcedo', descripcion: 'Contenedores, orquestación y pipelines de despliegue.' },
+        { id: 17, nombre: 'Power BI & Tableau', categoria: 'data', nivel: 'Básico', semanas: 6, precio: 'Básico', inscritos: 35, instructor: 'Juliana Franco', descripcion: 'Dashboards interactivos y visualización de datos de negocio.' },
+        { id: 18, nombre: 'Angular 17', categoria: 'web', nivel: 'Avanzado', semanas: 14, precio: 'Premium', inscritos: 12, instructor: 'Roberto Castillo', 'descripcion': 'Signals, standalone components, SSR y arquitectura empresarial.' },
+        { id: 19, nombre: 'Kotlin para Android', categoria: 'mobile', nivel: 'Intermedio', semanas: 12, precio: 'Estándar', inscritos: 9, instructor: 'Sandra Quintero', descripcion: 'Jetpack Compose, Coroutines y MVVM con Clean Architecture.' },
+        { id: 20, nombre: 'Swift & iOS Development', categoria: 'mobile', nivel: 'Avanzado', semanas: 14, precio: 'Premium', inscritos: 7, instructor: 'David Navarro', descripcion: 'SwiftUI, Combine, Core Data y publicación en App Store.' },
+        { id: 21, nombre: 'Inteligencia Artificial', categoria: 'data', nivel: 'Avanzado', semanas: 18, precio: 'Premium', inscritos: 20, instructor: 'Isabella Suárez', descripcion: 'LLMs, prompt engineering, RAG y despliegue de modelos de IA.' },
+        { id: 22, nombre: 'GraphQL & Apollo', categoria: 'web', nivel: 'Intermedio', semanas: 8, precio: 'Estándar', inscritos: 13, instructor: 'Camilo Ramírez', descripcion: 'Schemas, resolvers, subscriptions y Apollo Server.' },
+        { id: 23, nombre: 'Terraform & IaC', categoria: 'devops', nivel: 'Avanzado', semanas: 10, precio: 'Premium', inscritos: 8, instructor: 'Sebastián Rojas', descripcion: 'Infraestructura como código con Terraform y Ansible en AWS/GCP.' },
+        { id: 24, nombre: 'Diseño de Producto Digital', categoria: 'design', nivel: 'Intermedio', semanas: 10, precio: 'Estándar', inscritos: 16, instructor: 'Paola Silva', descripcion: 'Design thinking, sistemas de diseño y handoff con Figma.' },
+        { id: 25, nombre: 'MongoDB & NoSQL', categoria: 'data', nivel: 'Básico', semanas: 6, precio: 'Básico', inscritos: 24, instructor: 'Natalia Vega', descripcion: 'Documentos, agregaciones, índices y Atlas en la nube.' },
+        { id: 26, nombre: 'Next.js & SSR', categoria: 'web', nivel: 'Avanzado', semanas: 10, precio: 'Premium', inscritos: 17, instructor: 'Marcela Acosta', descripcion: 'App Router, Server Components, Edge Runtime y deployment.' },
+        { id: 27, nombre: 'Ethical Hacking', categoria: 'seguridad', nivel: 'Avanzado', semanas: 14, precio: 'Premium', inscritos: 10, instructor: 'Fernando Ospina', descripcion: 'Recon, explotación, post-explotación y reporte de vulnerabilidades.' },
+        { id: 28, nombre: 'Excel & Google Sheets Pro', categoria: 'marketing', nivel: 'Básico', semanas: 4, precio: 'Básico', inscritos: 42, instructor: 'Ana Martínez', descripcion: 'Tablas dinámicas, macros VBA, fórmulas avanzadas y automatización.' },
+        { id: 29, nombre: 'Git & GitHub Avanzado', categoria: 'web', nivel: 'Básico', semanas: 4, precio: 'Básico', inscritos: 38, instructor: 'Santiago Herrera', descripcion: 'Branching, rebase, hooks, GitHub Actions y code review.' },
+        { id: 30, nombre: 'Scrum & Gestión Ágil', categoria: 'marketing', nivel: 'Básico', semanas: 4, precio: 'Básico', inscritos: 29, instructor: 'Nicolás Reyes', descripcion: 'Ceremonias Scrum, Kanban, OKRs y herramientas como Jira y Notion.' }
+    ];
+
     var STORAGE_KEY = 'edutrack_estudiantes';
     var PLANES_MONTO = { 'Básico': 29.99, 'Estándar': 59.99, 'Premium': 99.99 };
 
@@ -55,14 +88,17 @@
         listaFiltrada: [],
         editandoId: null,
         grafico: null,
+        graficoPlan: null,
+        graficoProgreso: null,
         confirmCb: null,
         vistaActual: 'landing',
         paginaActual: 1,
-        itemsPorPagina: 12
+        itemsPorPagina: 12,
+        filtroCategoria: 'todos'
     };
 
     /* ════════════════════════════════════════════
-       ROUTER — landing | login | dashboard
+       ROUTER
     ════════════════════════════════════════════ */
     function mostrarVista(nombre, datos) {
         var saliente = document.getElementById('view-' + state.vistaActual);
@@ -86,11 +122,11 @@
                 actualizarFechaTopbar();
                 cargarDatos();
                 poblarSelectCiudades();
-                filtrar(); // Fuerza la lógica de paginación
+                filtrar();
                 actualizarKPIs();
                 actualizarGrafico();
             }
-            if (nombre === 'login' || nombre === 'landing') {
+            if (nombre === 'landing') {
                 window.EduTrack && window.EduTrack.closeSidebar && window.EduTrack.closeSidebar();
             }
         }, nombre === 'dashboard' ? 350 : 0);
@@ -135,27 +171,28 @@
                 var seccion = this.getAttribute('data-section');
                 if (!seccion) return;
 
-                /* Actualizar link activo */
                 document.querySelectorAll('.db-sidebar__nav-link').forEach(function (l) {
                     l.classList.remove('db-sidebar__nav-link--active');
                 });
                 this.classList.add('db-sidebar__nav-link--active');
 
-                /* Mostrar la sección correspondiente */
                 Object.keys(SECCIONES).forEach(function (k) {
                     var sec = document.getElementById(SECCIONES[k]);
-                    if (sec) {
-                        if (k === seccion) {
-                            sec.classList.remove('db-section--hidden');
-                            sec.style.display = 'block';
-                        } else {
-                            sec.classList.add('db-section--hidden');
-                            sec.style.display = 'none';
-                        }
+                    if (!sec) return;
+                    if (k === seccion) {
+                        sec.classList.remove('db-section--hidden');
+                        sec.style.display = 'block';
+                    } else {
+                        sec.classList.add('db-section--hidden');
+                        sec.style.display = 'none';
                     }
                 });
 
-                /* Cerrar sidebar en mobile */
+                /* Renderizar la sección al activarse */
+                if (seccion === 'cursos') renderizarCursos();
+                if (seccion === 'reportes') renderizarReportes();
+                if (seccion === 'configuracion') renderizarConfiguracion();
+
                 if (window.innerWidth < 768) {
                     window.EduTrack && window.EduTrack.closeSidebar && window.EduTrack.closeSidebar();
                 }
@@ -164,7 +201,7 @@
     }
 
     /* ════════════════════════════════════════════
-       1. cargarDatos
+       DATOS
     ════════════════════════════════════════════ */
     function cargarDatos() {
         try {
@@ -178,9 +215,6 @@
         guardarDatos();
     }
 
-    /* ════════════════════════════════════════════
-       2. guardarDatos
-    ════════════════════════════════════════════ */
     function guardarDatos() {
         try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state.estudiantes)); }
         catch (e) { showToast('Error al guardar', 'error'); }
@@ -195,24 +229,21 @@
         var avg = total
             ? Math.round(state.estudiantes.reduce(function (s, e) { return s + e.progreso; }, 0) / total)
             : 0;
-
         var set = function (id, val) { var el = document.getElementById(id); if (el) el.textContent = val; };
         set('kpiCursos', activos);
         set('kpiProgreso', avg + '%');
         set('kpiTotal', total);
-
         var bar = document.getElementById('kpiProgresoBar');
         if (bar) bar.style.setProperty('--progress-value', avg + '%');
     }
 
     /* ════════════════════════════════════════════
-       3. renderizarCards & Paginación
+       CARDS & PAGINACIÓN (estudiantes)
     ════════════════════════════════════════════ */
     function planSlug(p) {
         return (p || '').toLowerCase()
             .replace(/á/g, 'a').replace(/é/g, 'e').replace(/í/g, 'i')
-            .replace(/ó/g, 'o').replace(/ú/g, 'u')
-            .replace(/\s+/g, '');
+            .replace(/ó/g, 'o').replace(/ú/g, 'u').replace(/\s+/g, '');
     }
     function iniciales(n, a) { return ((n[0] || '') + (a[0] || '')).toUpperCase(); }
     function progresoClass(p) { return p >= 100 ? 'progress-fill--complete' : p < 40 ? 'progress-fill--low' : ''; }
@@ -221,7 +252,6 @@
     function renderizarCards(lista) {
         var grid = document.getElementById('studentsGrid');
         if (!grid) return;
-
         if (!lista || !lista.length) {
             grid.innerHTML = '<div class="empty-state"><div class="empty-state__icon">🔍</div>' +
                 '<p class="empty-state__title">Sin resultados</p>' +
@@ -230,12 +260,9 @@
             renderizarPaginacion(0);
             return;
         }
-
-        /* LÓGICA DE PAGINACIÓN: Cortar la lista a 12 items */
         var inicio = (state.paginaActual - 1) * state.itemsPorPagina;
         var fin = inicio + state.itemsPorPagina;
         var paginaDatos = lista.slice(inicio, fin);
-
         grid.innerHTML = paginaDatos.map(function (e, i) {
             return '<article class="student-card' + (e.activo ? '' : ' student-card--inactive') + '" ' +
                 'style="animation-delay:' + Math.min(i * 30, 300) + 'ms" data-id="' + e.id + '">' +
@@ -248,9 +275,9 @@
                 '<span class="plan-badge plan-badge--' + planSlug(e.plan) + '">' + e.plan + '</span>' +
                 '</div>' +
                 '<div class="card-body">' +
-                '<div class="card-detail"><span class="card-detail__icon">📍</span><span class="card-detail__text">' + e.ciudad + '</span></div>' +
-                '<div class="card-detail"><span class="card-detail__icon">💻</span><span class="card-detail__text">' + e.curso + '</span></div>' +
-                '<div class="card-detail"><span class="card-detail__icon">📅</span><span class="card-detail__text">' + formatFecha(e.fechaInscripcion) + '</span></div>' +
+                '<div class="card-detail"><span class="card-detail__icon">📍</span><span>' + e.ciudad + '</span></div>' +
+                '<div class="card-detail"><span class="card-detail__icon">💻</span><span>' + e.curso + '</span></div>' +
+                '<div class="card-detail"><span class="card-detail__icon">📅</span><span>' + formatFecha(e.fechaInscripcion) + '</span></div>' +
                 '</div>' +
                 '<div class="progress-wrap">' +
                 '<div class="progress-label"><span>Progreso</span><strong>' + e.progreso + '%</strong></div>' +
@@ -258,11 +285,10 @@
                 '</div>' +
                 '<div class="card-actions">' +
                 '<button class="btn btn-secondary btn--sm" onclick="EduTrack.abrirModal(' + e.id + ')">✏️ Editar</button>' +
-                '<button class="btn btn-danger    btn--sm" onclick="EduTrack.eliminarEstudiante(' + e.id + ')">🗑 Eliminar</button>' +
+                '<button class="btn btn-danger btn--sm" onclick="EduTrack.eliminarEstudiante(' + e.id + ')">🗑 Eliminar</button>' +
                 '</div>' +
                 '</article>';
         }).join('');
-
         actualizarContador(lista.length);
         renderizarPaginacion(lista.length);
     }
@@ -274,23 +300,16 @@
             container.id = 'paginationContainer';
             container.className = 'pagination';
             var grid = document.getElementById('studentsGrid');
-            grid.parentNode.insertBefore(container, grid.nextSibling);
+            if (grid) grid.parentNode.insertBefore(container, grid.nextSibling);
         }
-
         var totalPaginas = Math.ceil(totalItems / state.itemsPorPagina);
-        if (totalPaginas <= 1) {
-            container.innerHTML = '';
-            return;
-        }
-
-        var btnAnt = state.paginaActual === 1 ? 'disabled' : '';
-        var btnSig = state.paginaActual === totalPaginas ? 'disabled' : '';
-
-        var html = '<button class="btn btn-secondary btn--sm" onclick="EduTrack.cambiarPagina(' + (state.paginaActual - 1) + ')" ' + btnAnt + '>← Anterior</button>';
-        html += '<span class="pagination__info">Página ' + state.paginaActual + ' de ' + totalPaginas + '</span>';
-        html += '<button class="btn btn-secondary btn--sm" onclick="EduTrack.cambiarPagina(' + (state.paginaActual + 1) + ')" ' + btnSig + '>Siguiente →</button>';
-
-        container.innerHTML = html;
+        if (totalPaginas <= 1) { container.innerHTML = ''; return; }
+        var bA = state.paginaActual === 1 ? 'disabled' : '';
+        var bS = state.paginaActual === totalPaginas ? 'disabled' : '';
+        container.innerHTML =
+            '<button class="btn btn-secondary btn--sm" onclick="EduTrack.cambiarPagina(' + (state.paginaActual - 1) + ')" ' + bA + '>← Anterior</button>' +
+            '<span class="pagination__info">Página ' + state.paginaActual + ' de ' + totalPaginas + '</span>' +
+            '<button class="btn btn-secondary btn--sm" onclick="EduTrack.cambiarPagina(' + (state.paginaActual + 1) + ')" ' + bS + '>Siguiente →</button>';
     }
 
     function cambiarPagina(p) {
@@ -298,8 +317,8 @@
         if (p >= 1 && p <= totalPaginas) {
             state.paginaActual = p;
             renderizarCards(state.listaFiltrada);
-            // Hacer scroll suave hacia arriba
-            document.getElementById('secEstudiantes').scrollIntoView({ behavior: 'smooth' });
+            var sec = document.getElementById('secEstudiantes');
+            if (sec) sec.scrollIntoView({ behavior: 'smooth' });
         }
     }
 
@@ -309,31 +328,28 @@
     }
 
     /* ════════════════════════════════════════════
-       4. filtrar
+       FILTRAR (estudiantes)
     ════════════════════════════════════════════ */
     function filtrar() {
         var q = ((document.getElementById('searchInput') || {}).value || '').toLowerCase().trim();
         var ciudad = ((document.getElementById('filterCiudad') || {}).value || '');
         var plan = ((document.getElementById('filterPlan') || {}).value || '');
         var estado = ((document.getElementById('filterEstado') || {}).value || '');
-
         var hay = q || ciudad || plan || estado;
         var btn = document.getElementById('btnResetFiltros');
         if (btn) btn.classList.toggle('visible', !!hay);
-
         state.listaFiltrada = state.estudiantes.filter(function (e) {
             return (!q || (e.nombre + ' ' + e.apellido).toLowerCase().includes(q) || e.email.toLowerCase().includes(q))
                 && (!ciudad || e.ciudad === ciudad)
                 && (!plan || e.plan === plan)
                 && (!estado || (estado === 'activo' ? e.activo : !e.activo));
         });
-
-        state.paginaActual = 1; // Volver a pág 1 al filtrar
+        state.paginaActual = 1;
         renderizarCards(state.listaFiltrada);
     }
 
     /* ════════════════════════════════════════════
-       5. abrirModal
+       MODAL ESTUDIANTE
     ════════════════════════════════════════════ */
     function abrirModal(id) {
         state.editandoId = id || null;
@@ -377,9 +393,6 @@
         f.querySelectorAll('.form-group__error').forEach(function (el) { el.classList.remove('visible'); el.textContent = ''; });
     }
 
-    /* ════════════════════════════════════════════
-       6. guardarEstudiante
-    ════════════════════════════════════════════ */
     function guardarEstudiante() {
         var g = function (id) { return document.getElementById(id); };
         var d = {
@@ -395,7 +408,6 @@
         };
         if (validarCampos(d).length) return;
         var monto = PLANES_MONTO[d.plan] || 29.99;
-
         if (state.editandoId) {
             var idx = state.estudiantes.findIndex(function (e) { return e.id === state.editandoId; });
             if (idx > -1) Object.assign(state.estudiantes[idx], {
@@ -415,7 +427,6 @@
             });
             showToast('Estudiante agregado', 'success');
         }
-
         guardarDatos(); cerrarModal(); poblarSelectCiudades(); filtrar(); actualizarKPIs(); actualizarGrafico();
     }
 
@@ -428,7 +439,6 @@
             setFieldError(r[0], !r[1] ? r[2] : '');
             if (!r[1]) err.push(r[0]);
         });
-
         var re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!d.email || !re.test(d.email)) {
             setFieldError('fEmail', 'Email inválido'); err.push('fEmail');
@@ -436,15 +446,10 @@
             return e.email.toLowerCase() === d.email.toLowerCase() && e.id !== state.editandoId;
         })) {
             setFieldError('fEmail', 'Email ya registrado'); err.push('fEmail');
-        } else {
-            setFieldError('fEmail', '');
-        }
-
+        } else { setFieldError('fEmail', ''); }
         if (isNaN(d.progreso) || d.progreso < 0 || d.progreso > 100) {
             setFieldError('fProgreso', 'Entre 0 y 100'); err.push('fProgreso');
-        } else {
-            setFieldError('fProgreso', '');
-        }
+        } else { setFieldError('fProgreso', ''); }
         return err;
     }
 
@@ -460,9 +465,6 @@
         }
     }
 
-    /* ════════════════════════════════════════════
-       7. eliminarEstudiante
-    ════════════════════════════════════════════ */
     function eliminarEstudiante(id) {
         var e = state.estudiantes.find(function (x) { return x.id === id; }); if (!e) return;
         abrirConfirm(
@@ -482,17 +484,11 @@
         state.confirmCb = cb;
         document.getElementById('confirmOverlay').classList.add('is-open');
     }
-    function cerrarConfirm() {
-        document.getElementById('confirmOverlay').classList.remove('is-open');
-        state.confirmCb = null;
-    }
-    function ejecutarConfirm() {
-        if (typeof state.confirmCb === 'function') state.confirmCb();
-        cerrarConfirm();
-    }
+    function cerrarConfirm() { document.getElementById('confirmOverlay').classList.remove('is-open'); state.confirmCb = null; }
+    function ejecutarConfirm() { if (typeof state.confirmCb === 'function') state.confirmCb(); cerrarConfirm(); }
 
     /* ════════════════════════════════════════════
-       8. actualizarGrafico
+       GRÁFICO DASHBOARD
     ════════════════════════════════════════════ */
     function actualizarGrafico() {
         var cnt = {};
@@ -502,18 +498,14 @@
         var clrs = ['rgba(245,166,35,.85)', 'rgba(59,130,246,.85)', 'rgba(34,197,94,.85)',
             'rgba(139,92,246,.85)', 'rgba(249,115,22,.85)', 'rgba(236,72,153,.85)', 'rgba(20,184,166,.85)'];
         var bgColors = cities.map(function (_, i) { return clrs[i % clrs.length]; });
-
         if (state.grafico) {
             state.grafico.data.labels = cities;
             state.grafico.data.datasets[0].data = vals;
             state.grafico.data.datasets[0].backgroundColor = bgColors;
-            state.grafico.update();
-            return;
+            state.grafico.update(); return;
         }
-
         var ctx = document.getElementById('ciudadesChart');
         if (!ctx || typeof Chart === 'undefined') return;
-
         state.grafico = new Chart(ctx, {
             type: 'bar',
             data: {
@@ -527,13 +519,9 @@
                 plugins: {
                     legend: { display: false },
                     tooltip: {
-                        backgroundColor: '#161B22', borderColor: 'rgba(255,255,255,.1)',
-                        borderWidth: 1, titleColor: '#F0F6FC', bodyColor: '#8B949E',
-                        callbacks: {
-                            label: function (c) {
-                                return ' ' + c.parsed.y + ' estudiante' + (c.parsed.y !== 1 ? 's' : '');
-                            }
-                        }
+                        backgroundColor: '#161B22', borderColor: 'rgba(255,255,255,.1)', borderWidth: 1,
+                        titleColor: '#F0F6FC', bodyColor: '#8B949E',
+                        callbacks: { label: function (c) { return ' ' + c.parsed.y + ' estudiante' + (c.parsed.y !== 1 ? 's' : ''); } }
                     }
                 },
                 scales: {
@@ -542,6 +530,425 @@
                 }
             }
         });
+    }
+
+    /* ════════════════════════════════════════════
+       SECCIÓN CURSOS
+    ════════════════════════════════════════════ */
+    var CATEGORIAS_INFO = {
+        'todos': { label: 'Todos', emoji: '📚' },
+        'web': { label: 'Desarrollo Web', emoji: '🌐' },
+        'data': { label: 'Data & IA', emoji: '📊' },
+        'devops': { label: 'DevOps & Cloud', emoji: '☁️' },
+        'mobile': { label: 'Mobile', emoji: '📱' },
+        'design': { label: 'Diseño', emoji: '🎨' },
+        'seguridad': { label: 'Seguridad', emoji: '🔒' },
+        'marketing': { label: 'Marketing', emoji: '📣' }
+    };
+
+    function renderizarCursos() {
+        var sec = document.getElementById('secCursos');
+        if (!sec) return;
+
+        var filtro = state.filtroCategoria || 'todos';
+        var lista = filtro === 'todos'
+            ? CATALOGO_CURSOS
+            : CATALOGO_CURSOS.filter(function (c) { return c.categoria === filtro; });
+
+        /* Contar inscritos reales del dataset */
+        var inscritosPorCurso = {};
+        state.estudiantes.forEach(function (e) {
+            inscritosPorCurso[e.curso] = (inscritosPorCurso[e.curso] || 0) + 1;
+        });
+
+        var coloresCat = {
+            'web': '#3B82F6', 'data': '#F5A623', 'devops': '#8B5CF6',
+            'mobile': '#F97316', 'design': '#EC4899', 'seguridad': '#EF4444',
+            'marketing': '#22C55E'
+        };
+
+        /* Tabs de filtro */
+        var tabsHTML = Object.keys(CATEGORIAS_INFO).map(function (k) {
+            var info = CATEGORIAS_INFO[k];
+            var activo = (k === filtro) ? ' cat-tab--active' : '';
+            return '<button class="cat-tab' + activo + '" data-cat="' + k + '">' +
+                info.emoji + ' ' + info.label + '</button>';
+        }).join('');
+
+        /* Cards de cursos */
+        var cardsHTML = lista.map(function (c) {
+            var real = inscritosPorCurso[c.nombre] || c.inscritos;
+            var color = coloresCat[c.categoria] || '#F5A623';
+            var nivelClass = c.nivel === 'Avanzado' ? 'nivel--avanzado' : c.nivel === 'Intermedio' ? 'nivel--intermedio' : 'nivel--basico';
+            return '<article class="curso-card">' +
+                '<div class="curso-card__top" style="--cat-color:' + color + '">' +
+                '<span class="curso-cat-badge" style="background:' + color + '20;color:' + color + ';border-color:' + color + '40">' +
+                CATEGORIAS_INFO[c.categoria].emoji + ' ' + CATEGORIAS_INFO[c.categoria].label + '</span>' +
+                '<span class="curso-nivel ' + nivelClass + '">' + c.nivel + '</span>' +
+                '</div>' +
+                '<h3 class="curso-card__title">' + c.nombre + '</h3>' +
+                '<p class="curso-card__desc">' + c.descripcion + '</p>' +
+                '<div class="curso-card__meta">' +
+                '<span>👤 ' + c.instructor + '</span>' +
+                '<span>⏱ ' + c.semanas + ' sem</span>' +
+                '<span>👥 ' + real + ' inscritos</span>' +
+                '</div>' +
+                '<div class="curso-card__footer">' +
+                '<span class="plan-badge plan-badge--' + planSlug(c.precio) + '">' + c.precio + '</span>' +
+                '<span class="curso-card__precio">' +
+                (c.precio === 'Premium' ? '$99.99' : c.precio === 'Estándar' ? '$59.99' : '$29.99') +
+                ' USD</span>' +
+                '</div>' +
+                '</article>';
+        }).join('');
+
+        sec.innerHTML =
+            '<header class="page-header">' +
+            '<div><h2 class="page-header__title">Catálogo de <span>Cursos</span></h2>' +
+            '<p class="page-header__meta">' + CATALOGO_CURSOS.length + ' cursos disponibles · EduTrack</p></div>' +
+            '</header>' +
+            '<div class="cat-tabs" role="tablist" aria-label="Filtrar por categoría">' + tabsHTML + '</div>' +
+            '<p class="cursos-count">Mostrando <strong>' + lista.length + '</strong> curso' + (lista.length !== 1 ? 's' : '') + '</p>' +
+            '<div class="cursos-grid">' + cardsHTML + '</div>';
+
+        /* Eventos de los tabs */
+        sec.querySelectorAll('.cat-tab').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                state.filtroCategoria = this.getAttribute('data-cat');
+                renderizarCursos();
+            });
+        });
+    }
+
+    /* ════════════════════════════════════════════
+       SECCIÓN REPORTES
+    ════════════════════════════════════════════ */
+    function renderizarReportes() {
+        var sec = document.getElementById('secReportes');
+        if (!sec || sec._rendered) return;
+
+        var total = state.estudiantes.length;
+        var activos = state.estudiantes.filter(function (e) { return e.activo; }).length;
+        var inactivos = total - activos;
+        var avg = total ? Math.round(state.estudiantes.reduce(function (s, e) { return s + e.progreso; }, 0) / total) : 0;
+        var ingresos = state.estudiantes.reduce(function (s, e) { return s + e.montoUSD; }, 0).toFixed(2);
+        var completos = state.estudiantes.filter(function (e) { return e.progreso === 100; }).length;
+
+        sec.innerHTML =
+            '<header class="page-header">' +
+            '<div><h2 class="page-header__title">Reportes <span>Analíticos</span></h2>' +
+            '<p class="page-header__meta">Datos en tiempo real · ' + total + ' estudiantes</p></div>' +
+            '</header>' +
+
+            /* KPI resumen */
+            '<div class="rep-kpi-grid">' +
+            kpiBox('💰', 'Ingresos totales', '$' + ingresos, 'USD acumulado', '--kpi-blue-bg', '--kpi-blue-border', '--kpi-blue-icon') +
+            kpiBox('🎓', 'Completaron curso', completos, 'con progreso 100%', '--kpi-yellow-bg', '--kpi-yellow-border', '--kpi-yellow-icon') +
+            kpiBox('✅', 'Tasa de retención', Math.round(activos / total * 100) + '%', activos + ' activos de ' + total, '--kpi-blue-bg', '--kpi-blue-border', '--kpi-blue-icon') +
+            kpiBox('📊', 'Progreso promedio', avg + '%', 'promedio general', '--kpi-purple-bg', '--kpi-purple-border', '--kpi-purple-icon') +
+            '</div>' +
+
+            /* Gráficos */
+            '<div class="rep-charts-row">' +
+            '<section class="rep-chart-box" aria-label="Distribución por plan">' +
+            '<h3 class="rep-chart-title">Estudiantes por plan</h3>' +
+            '<div class="rep-canvas-wrap"><canvas id="repChartPlan"></canvas></div>' +
+            '</section>' +
+            '<section class="rep-chart-box" aria-label="Distribución de progreso">' +
+            '<h3 class="rep-chart-title">Distribución de progreso</h3>' +
+            '<div class="rep-canvas-wrap"><canvas id="repChartProgreso"></canvas></div>' +
+            '</section>' +
+            '</div>' +
+
+            /* Tabla top 10 */
+            '<section class="rep-table-section" aria-label="Top estudiantes por progreso">' +
+            '<h3 class="rep-chart-title">Top 10 estudiantes por progreso</h3>' +
+            '<div class="db-table-wrapper">' +
+            renderizarTablaTop10() +
+            '</div>' +
+            '</section>';
+
+        /* Esperar un tick para que el DOM esté pintado */
+        setTimeout(function () { crearGraficosReportes(); }, 50);
+        sec._rendered = true;
+    }
+
+    function kpiBox(icon, label, value, sub, bgVar, borderVar, colorVar) {
+        return '<article class="rep-kpi-box" style="background:var(' + bgVar + ');border-color:var(' + borderVar + ')">' +
+            '<div class="rep-kpi-icon" style="color:var(' + colorVar + ')">' + icon + '</div>' +
+            '<div class="rep-kpi-body">' +
+            '<p class="rep-kpi-label">' + label + '</p>' +
+            '<p class="rep-kpi-value" style="color:var(' + colorVar + ')">' + value + '</p>' +
+            '<p class="rep-kpi-sub">' + sub + '</p>' +
+            '</div></article>';
+    }
+
+    function renderizarTablaTop10() {
+        var top = state.estudiantes.slice().sort(function (a, b) { return b.progreso - a.progreso; }).slice(0, 10);
+        var rows = top.map(function (e, i) {
+            return '<tr class="db-table__row">' +
+                '<td class="db-table__td"><strong>' + (i + 1) + '</strong></td>' +
+                '<td class="db-table__td">' + e.nombre + ' ' + e.apellido + '</td>' +
+                '<td class="db-table__td">' + e.curso + '</td>' +
+                '<td class="db-table__td">' +
+                '<div style="display:flex;align-items:center;gap:.5rem">' +
+                '<div style="flex:1;height:6px;background:var(--color-bg-elevated);border-radius:999px;overflow:hidden">' +
+                '<div style="width:' + e.progreso + '%;height:100%;background:var(--color-accent-primary);border-radius:999px"></div>' +
+                '</div><strong>' + e.progreso + '%</strong></div></td>' +
+                '<td class="db-table__td"><span class="plan-badge plan-badge--' + planSlug(e.plan) + '">' + e.plan + '</span></td>' +
+                '</tr>';
+        }).join('');
+        return '<table class="db-table" style="min-width:520px">' +
+            '<thead class="db-table__head"><tr>' +
+            '<th class="db-table__th">#</th><th class="db-table__th">Estudiante</th>' +
+            '<th class="db-table__th">Curso</th><th class="db-table__th">Progreso</th>' +
+            '<th class="db-table__th">Plan</th>' +
+            '</tr></thead><tbody>' + rows + '</tbody></table>';
+    }
+
+    function crearGraficosReportes() {
+        if (typeof Chart === 'undefined') return;
+
+        /* Gráfico 1: por plan (doughnut) */
+        var cnt = { 'Básico': 0, 'Estándar': 0, 'Premium': 0 };
+        state.estudiantes.forEach(function (e) { if (cnt[e.plan] !== undefined) cnt[e.plan]++; });
+        var ctxPlan = document.getElementById('repChartPlan');
+        if (ctxPlan && !state.graficoPlan) {
+            state.graficoPlan = new Chart(ctxPlan, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Básico', 'Estándar', 'Premium'],
+                    datasets: [{
+                        data: [cnt['Básico'], cnt['Estándar'], cnt['Premium']],
+                        backgroundColor: ['rgba(34,197,94,.8)', 'rgba(59,130,246,.8)', 'rgba(245,166,35,.8)'],
+                        borderWidth: 0, hoverOffset: 6
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false, cutout: '65%',
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: '#8B949E', padding: 16, font: { family: "'DM Sans'", size: 12 } } },
+                        tooltip: {
+                            backgroundColor: '#161B22', borderColor: 'rgba(255,255,255,.1)', borderWidth: 1,
+                            titleColor: '#F0F6FC', bodyColor: '#8B949E'
+                        }
+                    }
+                }
+            });
+        }
+
+        /* Gráfico 2: progreso por rangos (bar horizontal) */
+        var rangos = { '0-24%': 0, '25-49%': 0, '50-74%': 0, '75-99%': 0, '100%': 0 };
+        state.estudiantes.forEach(function (e) {
+            var p = e.progreso;
+            if (p < 25) rangos['0-24%']++;
+            else if (p < 50) rangos['25-49%']++;
+            else if (p < 75) rangos['50-74%']++;
+            else if (p < 100) rangos['75-99%']++;
+            else rangos['100%']++;
+        });
+        var ctxProg = document.getElementById('repChartProgreso');
+        if (ctxProg && !state.graficoProgreso) {
+            state.graficoProgreso = new Chart(ctxProg, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(rangos),
+                    datasets: [{
+                        label: 'Estudiantes', data: Object.values(rangos),
+                        backgroundColor: ['rgba(239,68,68,.75)', 'rgba(249,115,22,.75)', 'rgba(245,166,35,.75)',
+                            'rgba(59,130,246,.75)', 'rgba(34,197,94,.75)'],
+                        borderRadius: 6, borderSkipped: false
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#161B22', borderColor: 'rgba(255,255,255,.1)', borderWidth: 1,
+                            titleColor: '#F0F6FC', bodyColor: '#8B949E'
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true, grid: { color: 'rgba(255,255,255,.05)' },
+                            ticks: { color: '#8B949E', stepSize: 1, font: { family: "'DM Sans'", size: 11 } }
+                        },
+                        y: {
+                            grid: { display: false },
+                            ticks: { color: '#8B949E', font: { family: "'DM Sans'", size: 11 } }
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    /* ════════════════════════════════════════════
+       SECCIÓN CONFIGURACIÓN
+    ════════════════════════════════════════════ */
+    function renderizarConfiguracion() {
+        var sec = document.getElementById('secConfiguracion');
+        if (!sec || sec._rendered) return;
+
+        sec.innerHTML =
+            '<header class="page-header">' +
+            '<div><h2 class="page-header__title">Configuración <span>del Sistema</span></h2>' +
+            '<p class="page-header__meta">Ajustes generales · EduTrack v2.3</p></div>' +
+            '</header>' +
+
+            '<div class="config-grid">' +
+
+            /* Tarjeta: Perfil */
+            '<section class="config-card" aria-labelledby="cfg-perfil">' +
+            '<h3 class="config-card__title" id="cfg-perfil">👤 Perfil del administrador</h3>' +
+            '<div class="config-form">' +
+            '<div class="form-group"><label class="config-label">Nombre completo</label>' +
+            '<input type="text" class="form-input config-input" id="cfgNombre" value="Administrador EduTrack" /></div>' +
+            '<div class="form-group"><label class="config-label">Correo electrónico</label>' +
+            '<input type="email" class="form-input config-input" id="cfgEmail" value="admin@edutrack.co" /></div>' +
+            '<div class="form-group"><label class="config-label">Cargo</label>' +
+            '<input type="text" class="form-input config-input" id="cfgCargo" value="Administrador General" /></div>' +
+            '<button class="btn btn-primary" onclick="EduTrack.guardarPerfil()">💾 Guardar perfil</button>' +
+            '</div></section>' +
+
+            /* Tarjeta: Seguridad */
+            '<section class="config-card" aria-labelledby="cfg-seg">' +
+            '<h3 class="config-card__title" id="cfg-seg">🔒 Seguridad</h3>' +
+            '<div class="config-form">' +
+            '<div class="form-group"><label class="config-label">Contraseña actual</label>' +
+            '<input type="password" class="form-input config-input" id="cfgPassActual" placeholder="••••••••" /></div>' +
+            '<div class="form-group"><label class="config-label">Nueva contraseña</label>' +
+            '<input type="password" class="form-input config-input" id="cfgPassNueva" placeholder="••••••••" /></div>' +
+            '<div class="form-group"><label class="config-label">Confirmar contraseña</label>' +
+            '<input type="password" class="form-input config-input" id="cfgPassConfirm" placeholder="••••••••" /></div>' +
+            '<button class="btn btn-primary" onclick="EduTrack.cambiarPassword()">🔑 Cambiar contraseña</button>' +
+            '</div></section>' +
+
+            /* Tarjeta: Notificaciones */
+            '<section class="config-card" aria-labelledby="cfg-notif">' +
+            '<h3 class="config-card__title" id="cfg-notif">🔔 Notificaciones</h3>' +
+            '<div class="config-toggles">' +
+            toggleRow('notifEmail', 'Notificaciones por email', true) +
+            toggleRow('notifProgreso', 'Alertas de progreso bajo (<40%)', true) +
+            toggleRow('notifNuevos', 'Nuevos registros de estudiantes', true) +
+            toggleRow('notifInactivos', 'Recordatorio de inactivos', false) +
+            toggleRow('notifReportes', 'Reportes semanales automáticos', false) +
+            '</div>' +
+            '<button class="btn btn-primary" style="margin-top:1.25rem" onclick="EduTrack.guardarNotificaciones()">💾 Guardar preferencias</button>' +
+            '</section>' +
+
+            /* Tarjeta: Sistema */
+            '<section class="config-card" aria-labelledby="cfg-sys">' +
+            '<h3 class="config-card__title" id="cfg-sys">⚙️ Sistema y datos</h3>' +
+            '<div class="config-actions-list">' +
+            '<div class="config-action-row">' +
+            '<div><p class="config-action-title">Exportar estudiantes (JSON)</p>' +
+            '<p class="config-action-sub">Descarga todos los registros en formato JSON</p></div>' +
+            '<button class="btn btn-secondary" onclick="EduTrack.exportarJSON()">📥 Exportar</button>' +
+            '</div>' +
+            '<div class="config-action-row">' +
+            '<div><p class="config-action-title">Exportar estudiantes (CSV)</p>' +
+            '<p class="config-action-sub">Compatible con Excel y Google Sheets</p></div>' +
+            '<button class="btn btn-secondary" onclick="EduTrack.exportarCSV()">📊 Exportar CSV</button>' +
+            '</div>' +
+            '<div class="config-action-row config-action-row--danger">' +
+            '<div><p class="config-action-title">Restablecer datos</p>' +
+            '<p class="config-action-sub">Elimina todos los cambios y restaura los 35 registros originales</p></div>' +
+            '<button class="btn btn-danger" onclick="EduTrack.restablecerDatos()">🔄 Restablecer</button>' +
+            '</div>' +
+            '</div>' +
+            '<p class="config-version">EduTrack v2.3 · Vanilla JS · CSS Puro · Sin frameworks</p>' +
+            '</section>' +
+
+            '</div>';
+
+        sec._rendered = true;
+    }
+
+    function toggleRow(id, label, checked) {
+        return '<div class="toggle-row">' +
+            '<label class="toggle-label" for="' + id + '">' + label + '</label>' +
+            '<label class="toggle-switch" aria-label="' + label + '">' +
+            '<input type="checkbox" id="' + id + '"' + (checked ? ' checked' : '') + ' />' +
+            '<span class="toggle-track"><span class="toggle-thumb"></span></span>' +
+            '</label></div>';
+    }
+
+    /* Acciones de configuración */
+    function guardarPerfil() {
+        var nombre = (document.getElementById('cfgNombre') || {}).value || '';
+        if (nombre.trim()) {
+            var set = function (id, v) { var el = document.getElementById(id); if (el) el.textContent = v; };
+            set('sidebarNombre', nombre.trim());
+            set('greetingNombre', nombre.trim().split(' ')[0]);
+        }
+        showToast('Perfil guardado correctamente', 'success');
+    }
+
+    function cambiarPassword() {
+        var actual = (document.getElementById('cfgPassActual') || {}).value || '';
+        var nueva = (document.getElementById('cfgPassNueva') || {}).value || '';
+        var confirm = (document.getElementById('cfgPassConfirm') || {}).value || '';
+        if (!actual.trim()) { showToast('Ingresa tu contraseña actual', 'error'); return; }
+        if (nueva.length < 6) { showToast('La nueva contraseña debe tener al menos 6 caracteres', 'error'); return; }
+        if (nueva !== confirm) { showToast('Las contraseñas no coinciden', 'error'); return; }
+        ['cfgPassActual', 'cfgPassNueva', 'cfgPassConfirm'].forEach(function (id) {
+            var el = document.getElementById(id); if (el) el.value = '';
+        });
+        showToast('Contraseña actualizada correctamente', 'success');
+    }
+
+    function guardarNotificaciones() {
+        showToast('Preferencias de notificaciones guardadas', 'success');
+    }
+
+    function exportarJSON() {
+        var blob = new Blob([JSON.stringify(state.estudiantes, null, 2)], { type: 'application/json' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url; a.download = 'edutrack_estudiantes.json'; a.click();
+        URL.revokeObjectURL(url);
+        showToast('JSON exportado correctamente', 'success');
+    }
+
+    function exportarCSV() {
+        var headers = ['id', 'nombre', 'apellido', 'email', 'ciudad', 'curso', 'progreso', 'fechaInscripcion', 'plan', 'montoUSD', 'activo'];
+        var rows = [headers.join(',')];
+        state.estudiantes.forEach(function (e) {
+            rows.push(headers.map(function (h) {
+                var v = e[h];
+                if (typeof v === 'string' && v.indexOf(',') > -1) v = '"' + v + '"';
+                return v;
+            }).join(','));
+        });
+        var blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url; a.download = 'edutrack_estudiantes.csv'; a.click();
+        URL.revokeObjectURL(url);
+        showToast('CSV exportado correctamente', 'success');
+    }
+
+    function restablecerDatos() {
+        abrirConfirm(
+            '¿Restablecer datos?',
+            'Se borrarán <strong>todos los cambios</strong> y se cargarán los 35 registros originales. Esta acción no se puede deshacer.',
+            function () {
+                state.estudiantes = DATASET_INICIAL.slice();
+                guardarDatos();
+                poblarSelectCiudades();
+                filtrar();
+                actualizarKPIs();
+                actualizarGrafico();
+                /* Forzar re-render de reportes al volver */
+                var secRep = document.getElementById('secReportes');
+                if (secRep) secRep._rendered = false;
+                state.graficoPlan = null;
+                state.graficoProgreso = null;
+                showToast('Datos restablecidos a los 35 originales', 'info');
+            }
+        );
     }
 
     /* ════════════════════════════════════════════
@@ -554,7 +961,7 @@
 
     function poblarSelectCiudades() {
         var arr = [];
-        state.estudiantes.forEach(function (e) { if (!arr.includes(e.ciudad)) arr.push(e.ciudad); });
+        state.estudiantes.forEach(function (e) { if (arr.indexOf(e.ciudad) === -1) arr.push(e.ciudad); });
         arr.sort();
         var sel = document.getElementById('filterCiudad'); if (!sel) return;
         var cur = sel.value;
@@ -577,65 +984,201 @@
         _toastTimer = setTimeout(function () { t.classList.remove('is-visible'); }, 3000);
     }
 
+
+    /* ════════════════════════════════════════════
+       PANEL DE NOTIFICACIONES
+    ════════════════════════════════════════════ */
+    var notifPanelAbierto = false;
+
+    function generarNotificaciones() {
+        var notifs = [];
+        var ahora = new Date();
+
+        /* 1. Estudiantes inactivos con bajo progreso (abandono) */
+        state.estudiantes
+            .filter(function (e) { return !e.activo && e.progreso < 50; })
+            .forEach(function (e) {
+                notifs.push({
+                    tipo: 'warning',
+                    icono: '⚠️',
+                    titulo: 'Posible abandono',
+                    texto: e.nombre + ' ' + e.apellido + ' está inactivo con solo ' + e.progreso + '% de progreso.',
+                    tiempo: 'Hoy'
+                });
+            });
+
+        /* 2. Estudiantes con progreso 100% aún activos */
+        state.estudiantes
+            .filter(function (e) { return e.activo && e.progreso === 100; })
+            .forEach(function (e) {
+                notifs.push({
+                    tipo: 'success',
+                    icono: '🎓',
+                    titulo: '¡Curso completado!',
+                    texto: e.nombre + ' ' + e.apellido + ' completó "' + e.curso + '" al 100%.',
+                    tiempo: 'Hoy'
+                });
+            });
+
+        /* 3. Estudiantes con progreso bajo (< 30%) y activos */
+        state.estudiantes
+            .filter(function (e) { return e.activo && e.progreso < 30; })
+            .forEach(function (e) {
+                notifs.push({
+                    tipo: 'info',
+                    icono: '📉',
+                    titulo: 'Progreso bajo',
+                    texto: e.nombre + ' ' + e.apellido + ' lleva solo ' + e.progreso + '% en "' + e.curso + '".',
+                    tiempo: 'Reciente'
+                });
+            });
+
+        /* 4. Resumen general */
+        var activos = state.estudiantes.filter(function (e) { return e.activo; }).length;
+        var inactivos = state.estudiantes.length - activos;
+        var avg = state.estudiantes.length
+            ? Math.round(state.estudiantes.reduce(function (s, e) { return s + e.progreso; }, 0) / state.estudiantes.length)
+            : 0;
+
+        notifs.unshift({
+            tipo: 'stat',
+            icono: '📊',
+            titulo: 'Resumen del sistema',
+            texto: state.estudiantes.length + ' estudiantes · ' + activos + ' activos · ' + inactivos + ' inactivos · Promedio ' + avg + '%',
+            tiempo: 'Ahora'
+        });
+
+        /* 5. Ingresos del mes actual */
+        var mesActual = ahora.getMonth();
+        var anioActual = ahora.getFullYear();
+        var meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+        var ingresosMes = state.estudiantes
+            .filter(function (e) {
+                var d = new Date(e.fechaInscripcion);
+                return d.getMonth() === mesActual && d.getFullYear() === anioActual;
+            })
+            .reduce(function (s, e) { return s + e.montoUSD; }, 0);
+
+        if (ingresosMes > 0) {
+            notifs.push({
+                tipo: 'success',
+                icono: '💰',
+                titulo: 'Ingresos ' + meses[mesActual],
+                texto: '$' + ingresosMes.toFixed(2) + ' USD generados este mes.',
+                tiempo: 'Este mes'
+            });
+        }
+
+        return notifs.slice(0, 12); /* máximo 12 notificaciones */
+    }
+
+    function abrirPanelNotificaciones() {
+        var panel = document.getElementById('notifPanel');
+        if (!panel) return;
+
+        var notifs = generarNotificaciones();
+        var colores = {
+            warning: { bg: 'rgba(245,166,35,0.08)', border: 'rgba(245,166,35,0.25)', dot: '#F5A623' },
+            success: { bg: 'rgba(34,197,94,0.08)', border: 'rgba(34,197,94,0.25)', dot: '#22C55E' },
+            info: { bg: 'rgba(59,130,246,0.08)', border: 'rgba(59,130,246,0.25)', dot: '#3B82F6' },
+            stat: { bg: 'rgba(139,92,246,0.08)', border: 'rgba(139,92,246,0.25)', dot: '#8B5CF6' }
+        };
+
+        var itemsHTML = notifs.map(function (n) {
+            var c = colores[n.tipo] || colores.info;
+            return '<div class="notif-item" style="background:' + c.bg + ';border-color:' + c.border + '">' +
+                '<div class="notif-item__left">' +
+                '<span class="notif-dot" style="background:' + c.dot + '"></span>' +
+                '<span class="notif-icono">' + n.icono + '</span>' +
+                '</div>' +
+                '<div class="notif-item__body">' +
+                '<p class="notif-titulo">' + n.titulo + '</p>' +
+                '<p class="notif-texto">' + n.texto + '</p>' +
+                '</div>' +
+                '<span class="notif-tiempo">' + n.tiempo + '</span>' +
+                '</div>';
+        }).join('');
+
+        var panelContent = document.getElementById('notifPanelContent');
+        if (panelContent) {
+            panelContent.innerHTML = itemsHTML ||
+                '<p class="notif-empty">No hay notificaciones pendientes.</p>';
+        }
+
+        var badge = document.getElementById('notifBadge');
+        var warnings = notifs.filter(function (n) { return n.tipo === 'warning'; }).length;
+        if (badge) {
+            badge.textContent = warnings || '';
+            badge.style.display = warnings ? 'flex' : 'none';
+        }
+
+        notifPanelAbierto = !notifPanelAbierto;
+        panel.classList.toggle('is-open', notifPanelAbierto);
+    }
+
+    function cerrarPanelNotificaciones() {
+        var panel = document.getElementById('notifPanel');
+        if (panel) panel.classList.remove('is-open');
+        notifPanelAbierto = false;
+    }
+
     /* ════════════════════════════════════════════
        INIT
     ════════════════════════════════════════════ */
     function init() {
-        /* Activar la Página Principal (Landing) por defecto */
         var vLanding = document.getElementById('view-landing');
         if (vLanding) vLanding.classList.add('view--active');
 
-        /* Formulario de login */
         var fLogin = document.getElementById('formLogin');
         if (fLogin) {
             fLogin.addEventListener('submit', function (e) {
                 e.preventDefault();
                 var nombre = (document.getElementById('loginNombre') || {}).value || '';
                 var pass = (document.getElementById('loginPassword') || {}).value || '';
-
-                /* Validación de campos */
-                var errNombre = document.getElementById('loginNombreError');
-                var errPass = document.getElementById('loginPasswordError');
+                var errN = document.getElementById('loginNombreError');
+                var errP = document.getElementById('loginPasswordError');
                 var ok = true;
-
                 if (!nombre.trim()) {
-                    if (errNombre) { errNombre.textContent = 'Ingresa tu usuario'; errNombre.classList.add('visible'); }
+                    if (errN) { errN.textContent = 'Ingresa tu usuario'; errN.classList.add('visible'); }
                     ok = false;
-                } else {
-                    if (errNombre) { errNombre.textContent = ''; errNombre.classList.remove('visible'); }
-                }
+                } else { if (errN) { errN.textContent = ''; errN.classList.remove('visible'); } }
                 if (!pass.trim()) {
-                    if (errPass) { errPass.textContent = 'Ingresa tu contraseña'; errPass.classList.add('visible'); }
+                    if (errP) { errP.textContent = 'Ingresa tu contraseña'; errP.classList.add('visible'); }
                     ok = false;
-                } else {
-                    if (errPass) { errPass.textContent = ''; errPass.classList.remove('visible'); }
-                }
-
+                } else { if (errP) { errP.textContent = ''; errP.classList.remove('visible'); } }
                 if (ok) mostrarVista('dashboard', { nombre: nombre });
             });
         }
 
-        /* Botón de Notificaciones Funcional */
         var btnNotif = document.getElementById('btnNotificaciones');
         if (btnNotif) {
-            btnNotif.addEventListener('click', function () {
-                showToast('Tienes 3 notificaciones del progreso de los estudiantes.', 'info');
+            btnNotif.addEventListener('click', function (e) {
+                e.stopPropagation();
+                abrirPanelNotificaciones();
             });
         }
 
-        /* Logout → vuelve al login */
-        var btnLogout = document.getElementById('btnLogout');
-        if (btnLogout) btnLogout.addEventListener('click', function () {
-            mostrarVista('login');
+        /* Cerrar panel al hacer click fuera */
+        document.addEventListener('click', function (e) {
+            var panel = document.getElementById('notifPanel');
+            var btn = document.getElementById('btnNotificaciones');
+            if (panel && notifPanelAbierto &&
+                !panel.contains(e.target) &&
+                e.target !== btn && !btn.contains(e.target)) {
+                cerrarPanelNotificaciones();
+            }
         });
 
-        /* Navegación del sidebar */
+        /* ── FIX: Logout → landing (no login) ── */
+        var btnLogout = document.getElementById('btnLogout');
+        if (btnLogout) btnLogout.addEventListener('click', function () {
+            mostrarVista('landing');
+        });
+
         initNavSidebar();
 
-        /* Filtros de gestión */
         var si = document.getElementById('searchInput');
         if (si) si.addEventListener('input', filtrar);
-
         ['filterCiudad', 'filterPlan', 'filterEstado'].forEach(function (id) {
             var el = document.getElementById(id); if (el) el.addEventListener('change', filtrar);
         });
@@ -648,20 +1191,16 @@
             filtrar();
         });
 
-        /* Slider de progreso */
         var sl = document.getElementById('fProgreso');
         var sv = document.getElementById('fProgresoVal');
         if (sl && sv) sl.addEventListener('input', function () { sv.textContent = this.value + '%'; });
 
-        /* Sincronizar monto con plan */
         var fp = document.getElementById('fPlan');
         if (fp) fp.addEventListener('change', function () { sincronizarMonto(this.value); });
 
-        /* Botón agregar estudiante */
         var ba = document.getElementById('btnAgregarEstudiante');
         if (ba) ba.addEventListener('click', function () { abrirModal(); });
 
-        /* Cerrar modales con overlay o Escape */
         var mo = document.getElementById('modalOverlay');
         if (mo) mo.addEventListener('click', function (e) { if (e.target === mo) cerrarModal(); });
 
@@ -689,5 +1228,12 @@
     window.EduTrack.ejecutarConfirm = ejecutarConfirm;
     window.EduTrack.mostrarVista = mostrarVista;
     window.EduTrack.cambiarPagina = cambiarPagina;
+    window.EduTrack.guardarPerfil = guardarPerfil;
+    window.EduTrack.cambiarPassword = cambiarPassword;
+    window.EduTrack.guardarNotificaciones = guardarNotificaciones;
+    window.EduTrack.exportarJSON = exportarJSON;
+    window.EduTrack.exportarCSV = exportarCSV;
+    window.EduTrack.restablecerDatos = restablecerDatos;
+    window.EduTrack.cerrarPanelNotificaciones = cerrarPanelNotificaciones;
 
 })();
